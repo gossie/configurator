@@ -4,19 +4,6 @@ import (
 	"fmt"
 )
 
-type Parameter struct {
-	id   int
-	name string
-}
-
-func (p Parameter) Id() int {
-	return p.id
-}
-
-func (p Parameter) Name() string {
-	return p.name
-}
-
 type Configuration struct {
 	parameters []*Parameter
 }
@@ -42,4 +29,13 @@ func Start(model Model) Configuration {
 	return Configuration{
 		parameters: parameters,
 	}
+}
+
+func SetValue(configuration Configuration, parameterId int, value string) (Configuration, error) {
+	for _, parameter := range configuration.parameters {
+		if parameter.id == parameterId {
+			parameter.SetValue(value)
+		}
+	}
+	return configuration, nil
 }

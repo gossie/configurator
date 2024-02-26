@@ -1,24 +1,62 @@
 package configurator
 
-var nextParameterId = 1
+import "strconv"
+
+type valueType int
+
+const (
+	intSetType valueType = iota
+)
+
+type ValueModel struct {
+	valueType valueType
+	values    []int
+}
+
+func NewIntSetModel(values []int) ValueModel {
+	return ValueModel{
+		valueType: intSetType,
+		values:    values,
+	}
+}
+
+func (vModel ValueModel) toInstance() Value {
+	switch vModel.valueType {
+	default:
+		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
+	case intSetType:
+		return intSet{vModel.values}
+	}
+}
 
 type ParameterModel struct {
-	name string
+	id    int
+	name  string
+	value ValueModel
+}
+
+func NewParameterModel(name string, value ValueModel) ParameterModel {
+	return ParameterModel{
+		name:  name,
+		value: value,
+	}
 }
 
 func (pModel ParameterModel) toInstance() Parameter {
-	parameterId := nextParameterId
-	nextParameterId++
 	return Parameter{
-		id:   parameterId,
-		name: pModel.name,
+		id:    pModel.id,
+		name:  pModel.name,
+		value: pModel.value.toInstance(),
 	}
 }
 
 type Model struct {
-	parameters []ParameterModel
+	nextParameterId int
+	parameters      []ParameterModel
 }
 
-func (pModel *Model) AddParameter(pName string) {
-	pModel.parameters = append(pModel.parameters, ParameterModel{pName})
+func (pModel *Model) AddParameter(param ParameterModel) {
+	pModel.nextParameterId++
+	param.id = pModel.nextParameterId
+	pModel.parameters = append(pModel.parameters, param)
 }
