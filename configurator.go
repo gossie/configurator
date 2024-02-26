@@ -34,7 +34,8 @@ func Start(model Model) Configuration {
 func SetValue(configuration Configuration, parameterId int, value string) (Configuration, error) {
 	for _, parameter := range configuration.parameters {
 		if parameter.id == parameterId {
-			parameter.SetValue(value)
+			err := parameter.SetValue(value)
+			return configuration, err
 		}
 	}
 	return configuration, nil

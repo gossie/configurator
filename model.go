@@ -8,19 +8,19 @@ const (
 	intSetType valueType = iota
 )
 
-type ValueModel struct {
+type valueModel struct {
 	valueType valueType
 	values    []int
 }
 
-func NewIntSetModel(values []int) ValueModel {
-	return ValueModel{
+func NewIntSetModel(values []int) valueModel {
+	return valueModel{
 		valueType: intSetType,
 		values:    values,
 	}
 }
 
-func (vModel ValueModel) toInstance() Value {
+func (vModel valueModel) toInstance() value {
 	switch vModel.valueType {
 	default:
 		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
@@ -32,10 +32,10 @@ func (vModel ValueModel) toInstance() Value {
 type ParameterModel struct {
 	id    int
 	name  string
-	value ValueModel
+	value valueModel
 }
 
-func NewParameterModel(name string, value ValueModel) ParameterModel {
+func NewParameterModel(name string, value valueModel) ParameterModel {
 	return ParameterModel{
 		name:  name,
 		value: value,
