@@ -16,8 +16,8 @@ func (p Parameter) Name() string {
 	return p.name
 }
 
-func (p Parameter) Terminal() bool {
-	return p.value.terminal()
+func (p Parameter) Final() bool {
+	return p.value.final()
 }
 
 func (p Parameter) Value() string {

@@ -25,7 +25,7 @@ func (vModel valueModel) toInstance() value {
 	default:
 		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
 	case intSetType:
-		return intSet{vModel.values}
+		return intValues{vModel.values}
 	}
 }
 

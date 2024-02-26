@@ -26,7 +26,7 @@ func TestThatConfigurationIsStarted(t *testing.T) {
 	if p1.Name() != "P1" {
 		t.Fatalf("name of parameter with ID 1 should be P1 but was %v", p1.Name())
 	}
-	if p1.Terminal() {
+	if p1.Final() {
 		t.Fatalf("value %v of parameter with ID 1 should not be terminal", p1.Value())
 	}
 	if p1.Value() != "{1,2,3}" {
@@ -43,7 +43,7 @@ func TestThatConfigurationIsStarted(t *testing.T) {
 	if p2.Name() != "P2" {
 		t.Fatalf("name of parameter with ID 2 should be P2 but was %v", p2.Name())
 	}
-	if p2.Terminal() {
+	if p2.Final() {
 		t.Fatalf("value %v of parameter with ID 2 should not be terminal", p2.Value())
 	}
 	if p2.Value() != "{1,2,3}" {
@@ -79,14 +79,14 @@ func TestThatValueIsSet(t *testing.T) {
 	p1, _ := configuration.ParameterById(1)
 	p2, _ := configuration.ParameterById(2)
 
-	if !p1.Terminal() {
+	if !p1.Final() {
 		t.Fatalf("value %v of parameter with ID 1 should be terminal", p1.Value())
 	}
 	if p1.Value() != "2" {
 		t.Fatalf("value of parameter with ID 1 should be 2 but was %v", p1.Value())
 	}
 
-	if p2.Terminal() {
+	if p2.Final() {
 		t.Fatalf("value %v of parameter with ID 2 should not be terminal", p2.Value())
 	}
 	if p2.Value() != "{1,2,3}" {

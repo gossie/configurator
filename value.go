@@ -10,32 +10,32 @@ import (
 type value interface {
 	possibleValue(aValue string) bool
 	set(aValue string) (value, error)
-	terminal() bool
+	final() bool
 	String() string
 }
 
-type intSet struct {
+type intValues struct {
 	value []int
 }
 
-func (v intSet) possibleValue(aValue string) bool {
+func (v intValues) possibleValue(aValue string) bool {
 	intValue, _ := strconv.Atoi(aValue)
 	return slices.Contains(v.value, intValue)
 }
 
-func (v intSet) set(aValue string) (value, error) {
+func (v intValues) set(aValue string) (value, error) {
 	if !v.possibleValue(aValue) {
 		return nil, fmt.Errorf("%v is not a possible value for %v", aValue, v)
 	}
 	intValue, _ := strconv.Atoi(aValue)
-	return intSet{value: []int{intValue}}, nil
+	return intValues{value: []int{intValue}}, nil
 }
 
-func (v intSet) terminal() bool {
+func (v intValues) final() bool {
 	return len(v.value) == 1
 }
 
-func (v intSet) String() string {
+func (v intValues) String() string {
 	if len(v.value) == 1 {
 		return strconv.Itoa(v.value[0])
 	}
