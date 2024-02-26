@@ -6,11 +6,14 @@ type valueType int
 
 const (
 	intSetType valueType = iota
+	intRangeType
 )
 
 type valueModel struct {
-	valueType valueType
-	values    []int
+	valueType        valueType
+	values           []int
+	min, max         int
+	minOpen, maxOpen bool
 }
 
 func NewIntSetModel(values []int) valueModel {
@@ -20,12 +23,29 @@ func NewIntSetModel(values []int) valueModel {
 	}
 }
 
+func NewIntRangeModel(min int, minOpen bool, max int, maxOpen bool) valueModel {
+	return valueModel{
+		valueType: intRangeType,
+		min:       min,
+		minOpen:   minOpen,
+		max:       max,
+		maxOpen:   maxOpen,
+	}
+}
+
 func (vModel valueModel) toInstance() value {
 	switch vModel.valueType {
 	default:
 		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
 	case intSetType:
 		return intValues{vModel.values}
+	case intRangeType:
+		return intRange{
+			min:     vModel.min,
+			minOpen: vModel.minOpen,
+			max:     vModel.max,
+			maxOpen: vModel.maxOpen,
+		}
 	}
 }
 

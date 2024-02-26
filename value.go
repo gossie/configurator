@@ -36,7 +36,7 @@ func (v intValues) final() bool {
 }
 
 func (v intValues) String() string {
-	if len(v.value) == 1 {
+	if v.final() {
 		return strconv.Itoa(v.value[0])
 	}
 
@@ -45,4 +45,44 @@ func (v intValues) String() string {
 		strValues = append(strValues, strconv.Itoa(intValue))
 	}
 	return "{" + strings.Join(strValues, ",") + "}"
+}
+
+type intRange struct {
+	min, max         int
+	minOpen, maxOpen bool
+}
+
+func (v intRange) possibleValue(aValue string) bool {
+	intValue, _ := strconv.Atoi(aValue)
+	return v.min <= intValue && v.max >= intValue
+}
+
+func (v intRange) set(aValue string) (value, error) {
+	if !v.possibleValue(aValue) {
+		return nil, fmt.Errorf("%v is not a possible value for %v", aValue, v)
+	}
+	intValue, _ := strconv.Atoi(aValue)
+	return intRange{min: intValue, minOpen: false, max: intValue, maxOpen: false}, nil
+}
+
+func (v intRange) final() bool {
+	return v.min == v.max
+}
+
+func (v intRange) String() string {
+	if v.final() {
+		return strconv.Itoa(v.min)
+	}
+
+	lower := "["
+	if v.minOpen {
+		lower = "]"
+	}
+
+	upper := "]"
+	if v.maxOpen {
+		upper = "["
+	}
+
+	return fmt.Sprintf("%v%v;%v%v", lower, v.min, v.max, upper)
 }
