@@ -49,34 +49,62 @@ func (vModel valueModel) toInstance() value {
 	}
 }
 
-type ParameterModel struct {
+type parameterModel struct {
 	id    int
 	name  string
 	value valueModel
 }
 
-func NewParameterModel(name string, value valueModel) ParameterModel {
-	return ParameterModel{
-		name:  name,
-		value: value,
+func (pModel parameterModel) Id() int {
+	return pModel.id
+}
+
+func (pModel parameterModel) toInstance(model Model) Parameter {
+	constraints := make([]constraint, 0)
+	for _, cModel := range model.constraints {
+		if cModel.srcId == pModel.id {
+			newConstraint := createContraint(newFinalCondition(cModel.srcId), newSetValueExecution(cModel.targetId, cModel.targetValue))
+			constraints = append(constraints, newConstraint)
+		}
+	}
+	return Parameter{
+		id:          pModel.id,
+		name:        pModel.name,
+		value:       pModel.value.toInstance(),
+		constraints: constraints,
 	}
 }
 
-func (pModel ParameterModel) toInstance() Parameter {
-	return Parameter{
-		id:    pModel.id,
-		name:  pModel.name,
-		value: pModel.value.toInstance(),
+type constraintModel struct {
+	srcId, targetId int
+	targetValue     string
+}
+
+func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue string) constraintModel {
+	return constraintModel{
+		srcId:       srcId,
+		targetId:    targetId,
+		targetValue: targetValue,
 	}
 }
 
 type Model struct {
 	nextParameterId int
-	parameters      []ParameterModel
+	parameters      []parameterModel
+	constraints     []constraintModel
 }
 
-func (pModel *Model) AddParameter(param ParameterModel) {
+func (pModel *Model) AddParameter(name string, value valueModel) parameterModel {
 	pModel.nextParameterId++
-	param.id = pModel.nextParameterId
-	pModel.parameters = append(pModel.parameters, param)
+	newParameter := parameterModel{
+		id:    pModel.nextParameterId,
+		name:  name,
+		value: value,
+	}
+	pModel.parameters = append(pModel.parameters, newParameter)
+	return newParameter
+}
+
+func (pModel *Model) AddConstraint(constraint constraintModel) {
+	pModel.constraints = append(pModel.constraints, constraint)
 }

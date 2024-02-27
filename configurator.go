@@ -9,20 +9,29 @@ type Configuration struct {
 }
 
 func (config Configuration) ParameterById(id int) (Parameter, error) {
+	pointer, err := config.mutableParameterById(id)
+	if err != nil {
+		var empty Parameter
+		return empty, fmt.Errorf("parameter with ID %v could not be found", id)
+	}
+
+	return *pointer, nil
+}
+
+func (config Configuration) mutableParameterById(id int) (*Parameter, error) {
 	for _, p := range config.parameters {
 		if p.id == id {
-			return *p, nil
+			return p, nil
 		}
 	}
 
-	var empty Parameter
-	return empty, fmt.Errorf("parameter with ID %v could not be found", id)
+	return nil, fmt.Errorf("parameter with ID %v could not be found", id)
 }
 
 func Start(model Model) Configuration {
 	parameters := make([]*Parameter, 0, len(model.parameters))
 	for _, pModel := range model.parameters {
-		pInstance := pModel.toInstance()
+		pInstance := pModel.toInstance(model)
 		parameters = append(parameters, &pInstance)
 	}
 
@@ -32,11 +41,14 @@ func Start(model Model) Configuration {
 }
 
 func SetValue(configuration Configuration, parameterId int, value string) (Configuration, error) {
-	for _, parameter := range configuration.parameters {
-		if parameter.id == parameterId {
-			err := parameter.SetValue(value)
-			return configuration, err
-		}
+	parameter, err := configuration.mutableParameterById(parameterId)
+	if err != nil {
+		return configuration, err
 	}
-	return configuration, nil
+
+	err = parameter.SetValue(value)
+	for _, c := range parameter.constraints {
+		c(configuration)
+	}
+	return configuration, err
 }

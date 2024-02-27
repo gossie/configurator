@@ -3,9 +3,10 @@ package configurator
 import "fmt"
 
 type Parameter struct {
-	id    int
-	name  string
-	value value
+	id          int
+	name        string
+	value       value
+	constraints []constraint
 }
 
 func (p Parameter) Id() int {

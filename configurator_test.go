@@ -17,7 +17,25 @@ func checkOpenParameter(param configurator.Parameter, err error, expectedId int,
 		t.Fatalf("name of parameter with ID %v should be P3 but was %v", expectedId, param.Name())
 	}
 	if param.Final() {
-		t.Fatalf("value %v of parameter with ID %v should not be terminal", expectedId, param.Value())
+		t.Fatalf("value %v of parameter with ID %v should not be final", expectedId, param.Value())
+	}
+	if param.Value() != expectedValue {
+		t.Fatalf("value of parameter with ID %v should be %v but was %v", expectedId, expectedValue, param.Value())
+	}
+}
+
+func checkFinalParameter(param configurator.Parameter, err error, expectedId int, expectedName string, expectedValue string, t *testing.T) {
+	if err != nil {
+		t.Fatalf("parameter with ID %v could not be found: %v", expectedId, err.Error())
+	}
+	if param.Id() != expectedId {
+		t.Fatalf("ID of the parameter should be %v but was %v", expectedId, param.Id())
+	}
+	if param.Name() != expectedName {
+		t.Fatalf("name of parameter with ID %v should be P3 but was %v", expectedId, param.Name())
+	}
+	if !param.Final() {
+		t.Fatalf("value %v of parameter with ID %v should be final", param.Value(), expectedId)
 	}
 	if param.Value() != expectedValue {
 		t.Fatalf("value of parameter with ID %v should be %v but was %v", expectedId, expectedValue, param.Value())
@@ -25,20 +43,13 @@ func checkOpenParameter(param configurator.Parameter, err error, expectedId int,
 }
 
 func TestThatConfigurationIsStarted(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel2 := configurator.NewParameterModel("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel3 := configurator.NewParameterModel("P3", configurator.NewIntRangeModel(7, false, 17, false))
-	pModel4 := configurator.NewParameterModel("P4", configurator.NewIntRangeModel(7, false, 17, true))
-	pModel5 := configurator.NewParameterModel("P5", configurator.NewIntRangeModel(7, true, 17, false))
-	pModel6 := configurator.NewParameterModel("P6", configurator.NewIntRangeModel(7, true, 17, true))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
-	model.AddParameter(pModel2)
-	model.AddParameter(pModel3)
-	model.AddParameter(pModel4)
-	model.AddParameter(pModel5)
-	model.AddParameter(pModel6)
+	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddParameter("P3", configurator.NewIntRangeModel(7, false, 17, false))
+	model.AddParameter("P4", configurator.NewIntRangeModel(7, false, 17, true))
+	model.AddParameter("P5", configurator.NewIntRangeModel(7, true, 17, false))
+	model.AddParameter("P6", configurator.NewIntRangeModel(7, true, 17, true))
 
 	configuration := configurator.Start(model)
 
@@ -62,10 +73,8 @@ func TestThatConfigurationIsStarted(t *testing.T) {
 }
 
 func TestThatParameterIsNotFound(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
+	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
 
 	configuration := configurator.Start(model)
 
@@ -76,10 +85,8 @@ func TestThatParameterIsNotFound(t *testing.T) {
 }
 
 func TestThatValueIsNotSetBecauseTheParameterIsMissing(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
+	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 2, "2")
@@ -92,39 +99,23 @@ func TestThatValueIsNotSetBecauseTheParameterIsMissing(t *testing.T) {
 }
 
 func TestThatValueIsSet_intValues(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel2 := configurator.NewParameterModel("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
-	model.AddParameter(pModel2)
+	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
-	p1, _ := configuration.ParameterById(1)
-	p2, _ := configuration.ParameterById(2)
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
 
-	if !p1.Final() {
-		t.Fatalf("value %v of parameter with ID 1 should be terminal", p1.Value())
-	}
-	if p1.Value() != "2" {
-		t.Fatalf("value of parameter with ID 1 should be 2 but was %v", p1.Value())
-	}
-
-	if p2.Final() {
-		t.Fatalf("value %v of parameter with ID 2 should not be terminal", p2.Value())
-	}
-	if p2.Value() != "{1,2,3}" {
-		t.Fatalf("value of parameter with ID 2 should be {1,2,3} but was %v", p2.Value())
-	}
+	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
+	checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
 }
 
 func TestThatAnImpossibleValueIsNotSet_intValues(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
+	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
 
 	configuration := configurator.Start(model)
 	configuration, err := configurator.SetValue(configuration, 1, "4")
@@ -132,47 +123,29 @@ func TestThatAnImpossibleValueIsNotSet_intValues(t *testing.T) {
 		t.Fatal("4 is not a valid value and should cause an error")
 	}
 
-	p1, _ := configuration.ParameterById(1)
+	p1, errP1 := configuration.ParameterById(1)
 
-	if p1.Value() != "{1,2,3}" {
-		t.Fatalf("value of parameter with ID 1 should be {1,2,3} but was %v", p1.Value())
-	}
+	checkOpenParameter(p1, errP1, 1, "P1", "{1,2,3}", t)
 }
 
 func TestThatValueIsSet_intRange(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := configurator.NewParameterModel("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
-	model.AddParameter(pModel2)
+	model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
+	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
-	p1, _ := configuration.ParameterById(1)
-	p2, _ := configuration.ParameterById(2)
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
 
-	if !p1.Final() {
-		t.Fatalf("value %v of parameter with ID 1 should be terminal", p1.Value())
-	}
-	if p1.Value() != "2" {
-		t.Fatalf("value of parameter with ID 1 should be 2 but was %v", p1.Value())
-	}
-
-	if p2.Final() {
-		t.Fatalf("value %v of parameter with ID 2 should not be terminal", p2.Value())
-	}
-	if p2.Value() != "{1,2,3}" {
-		t.Fatalf("value of parameter with ID 2 should be {1,2,3} but was %v", p2.Value())
-	}
+	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
+	checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
 }
 
 func TestThatAnImpossibleValueIsNotSet_intRange(t *testing.T) {
-	pModel1 := configurator.NewParameterModel("P1", configurator.NewIntRangeModel(1, false, 8, false))
-
 	model := configurator.Model{}
-	model.AddParameter(pModel1)
+	model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
 
 	configuration := configurator.Start(model)
 	configuration, err := configurator.SetValue(configuration, 1, "9")
@@ -180,9 +153,23 @@ func TestThatAnImpossibleValueIsNotSet_intRange(t *testing.T) {
 		t.Fatal("4 is not a valid value and should cause an error")
 	}
 
-	p1, _ := configuration.ParameterById(1)
+	p1, errP1 := configuration.ParameterById(1)
 
-	if p1.Value() != "[1;8]" {
-		t.Fatalf("value of parameter with ID 1 should be [1;8] but was %v", p1.Value())
-	}
+	checkOpenParameter(p1, errP1, 1, "P1", "[1;8]", t)
+}
+
+func TestThatRuleIsExecuted(t *testing.T) {
+	model := configurator.Model{}
+	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
+	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), "3"))
+
+	configuration := configurator.Start(model)
+	configuration, _ = configurator.SetValue(configuration, 1, "2")
+
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
+
+	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
+	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
 }
