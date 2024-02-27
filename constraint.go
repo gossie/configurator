@@ -59,10 +59,10 @@ type execution interface {
 
 type setValueExecution struct {
 	parameterId int
-	value       string
+	value       value
 }
 
-func newSetValueExecution(paramId int, value string) setValueExecution {
+func newSetValueExecution(paramId int, value value) setValueExecution {
 	return setValueExecution{paramId, value}
 }
 

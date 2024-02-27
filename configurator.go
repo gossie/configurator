@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type Configuration struct {
@@ -46,7 +47,8 @@ func SetValue(configuration Configuration, parameterId int, value string) (Confi
 		return configuration, err
 	}
 
-	err = parameter.SetValue(value)
+	intValue, _ := strconv.Atoi(value)
+	err = parameter.SetValue(intValues{[]int{intValue}})
 	for _, c := range parameter.constraints {
 		c(configuration)
 	}

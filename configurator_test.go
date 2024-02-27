@@ -162,7 +162,7 @@ func TestThatRuleIsExecuted(t *testing.T) {
 	model := configurator.Model{}
 	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
 	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), "3"))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalInt(3)))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")

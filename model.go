@@ -7,6 +7,7 @@ type valueType int
 const (
 	intSetType valueType = iota
 	intRangeType
+	finalInt
 )
 
 type valueModel struct {
@@ -14,6 +15,7 @@ type valueModel struct {
 	values           []int
 	min, max         int
 	minOpen, maxOpen bool
+	finalValue       int
 }
 
 func NewIntSetModel(values []int) valueModel {
@@ -33,6 +35,13 @@ func NewIntRangeModel(min int, minOpen bool, max int, maxOpen bool) valueModel {
 	}
 }
 
+func NewFinalInt(value int) valueModel {
+	return valueModel{
+		valueType:  finalInt,
+		finalValue: value,
+	}
+}
+
 func (vModel valueModel) toInstance() value {
 	switch vModel.valueType {
 	default:
@@ -46,6 +55,8 @@ func (vModel valueModel) toInstance() value {
 			max:     vModel.max,
 			maxOpen: vModel.maxOpen,
 		}
+	case finalInt:
+		return intValues{[]int{vModel.finalValue}}
 	}
 }
 
@@ -63,7 +74,7 @@ func (pModel parameterModel) toInstance(model Model) Parameter {
 	constraints := make([]constraint, 0)
 	for _, cModel := range model.constraints {
 		if cModel.srcId == pModel.id {
-			newConstraint := createContraint(newFinalCondition(cModel.srcId), newSetValueExecution(cModel.targetId, cModel.targetValue))
+			newConstraint := createContraint(newFinalCondition(cModel.srcId), newSetValueExecution(cModel.targetId, cModel.targetValue.toInstance()))
 			constraints = append(constraints, newConstraint)
 		}
 	}
@@ -77,10 +88,10 @@ func (pModel parameterModel) toInstance(model Model) Parameter {
 
 type constraintModel struct {
 	srcId, targetId int
-	targetValue     string
+	targetValue     valueModel
 }
 
-func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue string) constraintModel {
+func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
 		srcId:       srcId,
 		targetId:    targetId,
