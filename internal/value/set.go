@@ -36,7 +36,7 @@ func (v intValues) subsumedByRange(aValue intRange) bool {
 	return true
 }
 
-func (v intValues) sect(other Value) Value {
+func (v intValues) Sect(other Value) Value {
 	return other.sectWithSet(v)
 }
 
@@ -58,6 +58,25 @@ func (v intValues) sectWithRange(aValue intRange) Value {
 		}
 	}
 	return NewIntValues(values)
+}
+
+func (v intValues) Diff(other Value) Value {
+	return other.diffFromSet(v)
+}
+
+func (v intValues) diffFromSet(aValue intValues) Value {
+	values := make([]int, 0)
+	for _, intValue := range aValue.values {
+		if !slices.Contains(v.values, intValue) {
+			values = append(values, intValue)
+		}
+	}
+	return NewIntValues(values)
+}
+
+func (v intValues) diffFromRange(aValue intRange) Value {
+	// TODO
+	panic("not yet implemented")
 }
 
 func (v intValues) Final() bool {

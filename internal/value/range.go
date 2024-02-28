@@ -31,7 +31,7 @@ func (v intRange) subsumedByRange(aValue intRange) bool {
 	return v.min >= aValue.min && v.max <= aValue.max
 }
 
-func (v intRange) sect(other Value) Value {
+func (v intRange) Sect(other Value) Value {
 	return other.sectWithRange(v)
 }
 
@@ -47,6 +47,20 @@ func (v intRange) sectWithSet(aValue intValues) Value {
 
 func (v intRange) sectWithRange(aValue intRange) Value {
 	return NewIntRange(max(v.min, aValue.min), false, min(v.min, aValue.min), false)
+}
+
+func (v intRange) Diff(other Value) Value {
+	return other.diffFromRange(v)
+}
+
+func (v intRange) diffFromSet(aValue intValues) Value {
+	// TODO
+	panic("not yet implemented")
+}
+
+func (v intRange) diffFromRange(aValue intRange) Value {
+	// TODO
+	panic("not yet implemented")
 }
 
 func (v intRange) Final() bool {

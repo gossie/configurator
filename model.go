@@ -83,6 +83,7 @@ type constraintType int
 const (
 	setValueIfFinal constraintType = iota
 	setValueIfValue
+	excludeValueIfValue
 )
 
 type constraintModel struct {
@@ -103,6 +104,16 @@ func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue valueMod
 func NewSetValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
 		constraintType: setValueIfValue,
+		srcId:          srcId,
+		targetId:       targetId,
+		srcValue:       srcValue,
+		targetValue:    targetValue,
+	}
+}
+
+func NewExcludeValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId int, targetValue valueModel) constraintModel {
+	return constraintModel{
+		constraintType: excludeValueIfValue,
 		srcId:          srcId,
 		targetId:       targetId,
 		srcValue:       srcValue,

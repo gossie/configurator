@@ -53,7 +53,7 @@ func (p InternalParameter) Selectable() bool {
 func (p InternalParameter) RestrictedValue() value.Value {
 	currentValue := p.originalValue
 	for _, r := range p.restrictions {
-		currentValue = value.Sect(currentValue, r.value)
+		currentValue = currentValue.Sect(r.value)
 	}
 	return currentValue
 }

@@ -33,6 +33,30 @@ func (execution setValueExecution) revert(config map[int]*InternalParameter) {
 	param.RemoveRestrictionsFromConstraint(execution.srcId)
 }
 
+type excludeValueExecution struct {
+	srcId, targetId int
+	value           value.Value
+}
+
+func NewExcludeValueExecution(srcId, targetId int, value value.Value) excludeValueExecution {
+	return excludeValueExecution{srcId, targetId, value}
+}
+
+func (execution excludeValueExecution) execute(config map[int]*InternalParameter) {
+	param := config[execution.targetId]
+	change, _ := param.RestrictValueFromConstraint(execution.srcId, param.originalValue.Diff(execution.value))
+	if change {
+		for _, c := range param.Constraints {
+			c(config)
+		}
+	}
+}
+
+func (execution excludeValueExecution) revert(config map[int]*InternalParameter) {
+	param := config[execution.targetId]
+	param.RemoveRestrictionsFromConstraint(execution.srcId)
+}
+
 type disableExecution struct {
 	parameterId int
 }

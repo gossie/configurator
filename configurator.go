@@ -35,6 +35,14 @@ func addConstraintsForSetValueIfValue(cModel constraintModel, parameters map[int
 	// targetParam.AppendConstraint(newTargetConstraint)
 }
 
+func addConstraintsForExcludeValueIfValue(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.srcId]
+	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.srcId, configuration.Is, cModel.srcValue.toInstance()), configuration.NewExcludeValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+	srcParam.AppendConstraint(newSrcConstraint)
+
+	// TODO
+}
+
 func Start(model Model) configuration1.Configuration {
 	parameters := make(map[int]*configuration.InternalParameter, len(model.parameters))
 	for _, pModel := range model.parameters {
@@ -50,6 +58,8 @@ func Start(model Model) configuration1.Configuration {
 			addConstraintsForSetValueIfFinal(cModel, parameters)
 		case setValueIfValue:
 			addConstraintsForSetValueIfValue(cModel, parameters)
+		case excludeValueIfValue:
+			addConstraintsForExcludeValueIfValue(cModel, parameters)
 		}
 	}
 
