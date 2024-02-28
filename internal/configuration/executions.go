@@ -6,25 +6,31 @@ import (
 
 type execution interface {
 	execute(map[int]*InternalParameter)
+	revert(map[int]*InternalParameter)
 }
 
 type setValueExecution struct {
-	parameterId int
-	value       value.Value
+	srcId, targetId int
+	value           value.Value
 }
 
-func NewSetValueExecution(paramId int, value value.Value) setValueExecution {
-	return setValueExecution{paramId, value}
+func NewSetValueExecution(srcId, targetId int, value value.Value) setValueExecution {
+	return setValueExecution{srcId, targetId, value}
 }
 
 func (execution setValueExecution) execute(config map[int]*InternalParameter) {
-	param := config[execution.parameterId]
-	change, _ := param.SetValue(execution.value)
+	param := config[execution.targetId]
+	change, _ := param.RestrictValueFromConstraint(execution.srcId, execution.value)
 	if change {
 		for _, c := range param.Constraints {
 			c(config)
 		}
 	}
+}
+
+func (execution setValueExecution) revert(config map[int]*InternalParameter) {
+	param := config[execution.targetId]
+	param.RemoveRestrictionsFromConstraint(execution.srcId)
 }
 
 type disableExecution struct {
@@ -41,4 +47,8 @@ func (execution disableExecution) execute(config map[int]*InternalParameter) {
 	for _, c := range param.Constraints {
 		c(config)
 	}
+}
+
+func (execution disableExecution) revert(config map[int]*InternalParameter) {
+	// TODO
 }

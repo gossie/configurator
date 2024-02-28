@@ -6,6 +6,8 @@ func CreateContraint(condition condition, exexution execution) Constraint {
 	return func(config map[int]*InternalParameter) (bool, error) {
 		if condition.fulfilled(config) {
 			exexution.execute(config)
+		} else {
+			exexution.revert(config)
 		}
 		return false, nil
 	}

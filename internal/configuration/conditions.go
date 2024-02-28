@@ -72,5 +72,5 @@ func NewValueCondition(paramId int, op compareOperator, value value.Value) param
 
 func (condition parameterValueCondition) fulfilled(config map[int]*InternalParameter) bool {
 	param := config[condition.parameterId]
-	return condition.operator(param.value, condition.value)
+	return condition.operator(param.RestrictedValue(), condition.value)
 }

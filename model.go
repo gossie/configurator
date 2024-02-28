@@ -78,16 +78,35 @@ func (pModel parameterModel) toInstance() configuration.InternalParameter {
 	)
 }
 
+type constraintType int
+
+const (
+	setValueIfFinal constraintType = iota
+	setValueIfValue
+)
+
 type constraintModel struct {
-	srcId, targetId int
-	targetValue     valueModel
+	constraintType        constraintType
+	srcId, targetId       int
+	srcValue, targetValue valueModel
 }
 
 func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
-		srcId:       srcId,
-		targetId:    targetId,
-		targetValue: targetValue,
+		constraintType: setValueIfFinal,
+		srcId:          srcId,
+		targetId:       targetId,
+		targetValue:    targetValue,
+	}
+}
+
+func NewSetValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId int, targetValue valueModel) constraintModel {
+	return constraintModel{
+		constraintType: setValueIfValue,
+		srcId:          srcId,
+		targetId:       targetId,
+		srcValue:       srcValue,
+		targetValue:    targetValue,
 	}
 }
 
