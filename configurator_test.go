@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	"github.com/gossie/configurator"
+	"github.com/gossie/configurator/configuration"
 )
 
-func checkOpenParameter(param configurator.Parameter, err error, expectedId int, expectedName string, expectedValue string, t *testing.T) {
+func checkOpenParameter(param configuration.Parameter, err error, expectedId int, expectedName string, expectedValue string, t *testing.T) {
 	if err != nil {
 		t.Fatalf("parameter with ID %v could not be found: %v", expectedId, err.Error())
 	}
@@ -15,6 +16,9 @@ func checkOpenParameter(param configurator.Parameter, err error, expectedId int,
 	}
 	if param.Name() != expectedName {
 		t.Fatalf("name of parameter with ID %v should be P3 but was %v", expectedId, param.Name())
+	}
+	if !param.Selectable() {
+		t.Fatalf("parameter with ID %v should be selectable", expectedId)
 	}
 	if param.Final() {
 		t.Fatalf("value %v of parameter with ID %v should not be final", expectedId, param.Value())
@@ -24,7 +28,7 @@ func checkOpenParameter(param configurator.Parameter, err error, expectedId int,
 	}
 }
 
-func checkFinalParameter(param configurator.Parameter, err error, expectedId int, expectedName string, expectedValue string, t *testing.T) {
+func checkFinalParameter(param configuration.Parameter, err error, expectedId int, expectedName string, expectedValue string, t *testing.T) {
 	if err != nil {
 		t.Fatalf("parameter with ID %v could not be found: %v", expectedId, err.Error())
 	}
@@ -34,11 +38,29 @@ func checkFinalParameter(param configurator.Parameter, err error, expectedId int
 	if param.Name() != expectedName {
 		t.Fatalf("name of parameter with ID %v should be P3 but was %v", expectedId, param.Name())
 	}
+	if !param.Selectable() {
+		t.Fatalf("parameter with ID %v should be selectable", expectedId)
+	}
 	if !param.Final() {
 		t.Fatalf("value %v of parameter with ID %v should be final", param.Value(), expectedId)
 	}
 	if param.Value() != expectedValue {
 		t.Fatalf("value of parameter with ID %v should be %v but was %v", expectedId, expectedValue, param.Value())
+	}
+}
+
+func checkUnselectableParameter(param configuration.Parameter, err error, expectedId int, expectedName string, t *testing.T) {
+	if err != nil {
+		t.Fatalf("parameter with ID %v could not be found: %v", expectedId, err.Error())
+	}
+	if param.Id() != expectedId {
+		t.Fatalf("ID of the parameter should be %v but was %v", expectedId, param.Id())
+	}
+	if param.Name() != expectedName {
+		t.Fatalf("name of parameter with ID %v should be P3 but was %v", expectedId, param.Name())
+	}
+	if param.Selectable() {
+		t.Fatalf("parameter with ID %v should not be selectable", expectedId)
 	}
 }
 
@@ -158,11 +180,11 @@ func TestThatAnImpossibleValueIsNotSet_intRange(t *testing.T) {
 	checkOpenParameter(p1, errP1, 1, "P1", "[1;8]", t)
 }
 
-func TestThatRuleIsExecuted(t *testing.T) {
+func TestThatForwardRuleIsExecuted(t *testing.T) {
 	model := configurator.Model{}
 	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
 	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalInt(3)))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
@@ -174,13 +196,29 @@ func TestThatRuleIsExecuted(t *testing.T) {
 	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
 }
 
-func TestThatDependingRulesAreExecuted(t *testing.T) {
+func TestThatBackwardRuleIsExecuted(t *testing.T) {
+	model := configurator.Model{}
+	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
+	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
+
+	configuration := configurator.Start(model)
+	configuration, _ = configurator.SetValue(configuration, 2, "1")
+
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
+
+	checkUnselectableParameter(p1, errP1, 1, "P1", t)
+	checkFinalParameter(p2, errP2, 2, "P2", "1", t)
+}
+
+func TestThatDependingForwardRulesAreExecuted(t *testing.T) {
 	model := configurator.Model{}
 	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
 	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
 	pModel3 := model.AddParameter("P3", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalInt(3)))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), configurator.NewFinalInt(1)))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), configurator.NewIntSetModel([]int{1, 2})))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
@@ -191,5 +229,5 @@ func TestThatDependingRulesAreExecuted(t *testing.T) {
 
 	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
 	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
-	checkFinalParameter(p3, errP3, 3, "P3", "1", t)
+	checkOpenParameter(p3, errP3, 3, "P3", "{1,2}", t)
 }

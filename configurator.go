@@ -3,54 +3,44 @@ package configurator
 import (
 	"fmt"
 	"strconv"
+
+	configuration1 "github.com/gossie/configurator/configuration"
+	"github.com/gossie/configurator/internal/configuration"
+	"github.com/gossie/configurator/internal/value"
 )
 
-type Configuration struct {
-	parameters []*Parameter
-}
-
-func (config Configuration) ParameterById(id int) (Parameter, error) {
-	pointer, err := config.mutableParameterById(id)
-	if err != nil {
-		var empty Parameter
-		return empty, fmt.Errorf("parameter with ID %v could not be found", id)
-	}
-
-	return *pointer, nil
-}
-
-func (config Configuration) mutableParameterById(id int) (*Parameter, error) {
-	for _, p := range config.parameters {
-		if p.id == id {
-			return p, nil
-		}
-	}
-
-	return nil, fmt.Errorf("parameter with ID %v could not be found", id)
-}
-
-func Start(model Model) Configuration {
-	parameters := make([]*Parameter, 0, len(model.parameters))
+func Start(model Model) configuration1.Configuration {
+	parameters := make(map[int]*configuration.InternalParameter, len(model.parameters))
 	for _, pModel := range model.parameters {
-		pInstance := pModel.toInstance(model)
-		parameters = append(parameters, &pInstance)
+		pInstance := pModel.toInstance()
+		parameters[pModel.id] = &pInstance
 	}
 
-	return Configuration{
-		parameters: parameters,
+	for _, cModel := range model.constraints {
+		srcParam := parameters[cModel.srcId]
+		newSrcConstraint := configuration.CreateContraint(configuration.NewFinalCondition(cModel.srcId), configuration.NewSetValueExecution(cModel.targetId, cModel.targetValue.toInstance()))
+		srcParam.AppendConstraint(newSrcConstraint)
+
+		targetParam := parameters[cModel.targetId]
+		newTargetConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.targetId, configuration.IsNot, cModel.targetValue.toInstance()), configuration.NewDisableExecution(cModel.srcId))
+		targetParam.AppendConstraint(newTargetConstraint)
+
 	}
+
+	return configuration.NewInternalConfiguration(parameters)
 }
 
-func SetValue(configuration Configuration, parameterId int, value string) (Configuration, error) {
-	parameter, err := configuration.mutableParameterById(parameterId)
-	if err != nil {
-		return configuration, err
+func SetValue(config configuration1.Configuration, parameterId int, valueToSet string) (configuration1.Configuration, error) {
+	internalConfig := config.(configuration.InternalConfiguration)
+	parameter, ok := internalConfig.Parameters[parameterId]
+	if !ok {
+		return config, fmt.Errorf("parameter with ID %v could not be found", parameterId)
 	}
 
-	intValue, _ := strconv.Atoi(value)
-	_, err = parameter.SetValue(intValues{[]int{intValue}})
-	for _, c := range parameter.constraints {
-		c(configuration)
+	intValue, _ := strconv.Atoi(valueToSet)
+	_, err := parameter.SetValue(value.NewIntValues([]int{intValue}))
+	for _, c := range parameter.Constraints {
+		c(internalConfig.Parameters)
 	}
-	return configuration, err
+	return config, err
 }

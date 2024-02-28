@@ -1,4 +1,4 @@
-package configurator
+package value
 
 import (
 	"fmt"
@@ -7,25 +7,29 @@ import (
 	"strings"
 )
 
-type value interface {
-	possibleValue(aValue value) bool
+type Value interface {
+	Subsumes(aValue Value) bool
 	subsumedByRange(other intRange) bool
 	subsumedBySet(other intValues) bool
-	final() bool
+	Final() bool
 	String() string
 }
 
 type intValues struct {
-	value []int
+	values []int
 }
 
-func (v intValues) possibleValue(aValue value) bool {
+func NewIntValues(values []int) Value {
+	return intValues{values}
+}
+
+func (v intValues) Subsumes(aValue Value) bool {
 	return aValue.subsumedBySet(v)
 }
 
 func (v intValues) subsumedBySet(aValue intValues) bool {
-	for _, intValue := range v.value {
-		if !slices.Contains(aValue.value, intValue) {
+	for _, intValue := range v.values {
+		if !slices.Contains(aValue.values, intValue) {
 			return false
 		}
 	}
@@ -33,7 +37,7 @@ func (v intValues) subsumedBySet(aValue intValues) bool {
 }
 
 func (v intValues) subsumedByRange(aValue intRange) bool {
-	for _, intValue := range v.value {
+	for _, intValue := range v.values {
 		if intValue < aValue.min || intValue > aValue.max {
 			return false
 		}
@@ -41,26 +45,17 @@ func (v intValues) subsumedByRange(aValue intRange) bool {
 	return true
 }
 
-/*
-	func (v intValues) set(aValue string) (value, error) {
-		if !v.possibleValue(aValue) {
-			return nil, fmt.Errorf("%v is not a possible value for %v", aValue, v)
-		}
-		intValue, _ := strconv.Atoi(aValue)
-		return intValues{value: []int{intValue}}, nil
-	}
-*/
-func (v intValues) final() bool {
-	return len(v.value) == 1
+func (v intValues) Final() bool {
+	return len(v.values) == 1
 }
 
 func (v intValues) String() string {
-	if v.final() {
-		return strconv.Itoa(v.value[0])
+	if v.Final() {
+		return strconv.Itoa(v.values[0])
 	}
 
-	strValues := make([]string, 0, len(v.value))
-	for _, intValue := range v.value {
+	strValues := make([]string, 0, len(v.values))
+	for _, intValue := range v.values {
 		strValues = append(strValues, strconv.Itoa(intValue))
 	}
 	return "{" + strings.Join(strValues, ",") + "}"
@@ -71,7 +66,16 @@ type intRange struct {
 	minOpen, maxOpen bool
 }
 
-func (v intRange) possibleValue(aValue value) bool {
+func NewIntRange(min int, minOpen bool, max int, maxOpen bool) Value {
+	return intRange{
+		min,
+		max,
+		minOpen,
+		maxOpen,
+	}
+}
+
+func (v intRange) Subsumes(aValue Value) bool {
 	return aValue.subsumedByRange(v)
 }
 
@@ -83,12 +87,12 @@ func (v intRange) subsumedByRange(aValue intRange) bool {
 	return v.min >= aValue.min && v.max <= aValue.max
 }
 
-func (v intRange) final() bool {
+func (v intRange) Final() bool {
 	return v.min == v.max
 }
 
 func (v intRange) String() string {
-	if v.final() {
+	if v.Final() {
 		return strconv.Itoa(v.min)
 	}
 

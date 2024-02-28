@@ -1,6 +1,11 @@
 package configurator
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/gossie/configurator/internal/configuration"
+	"github.com/gossie/configurator/internal/value"
+)
 
 type valueType int
 
@@ -35,28 +40,23 @@ func NewIntRangeModel(min int, minOpen bool, max int, maxOpen bool) valueModel {
 	}
 }
 
-func NewFinalInt(value int) valueModel {
+func NewFinalIntModel(value int) valueModel {
 	return valueModel{
 		valueType:  finalInt,
 		finalValue: value,
 	}
 }
 
-func (vModel valueModel) toInstance() value {
+func (vModel valueModel) toInstance() value.Value {
 	switch vModel.valueType {
 	default:
 		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
 	case intSetType:
-		return intValues{vModel.values}
+		return value.NewIntValues(vModel.values)
 	case intRangeType:
-		return intRange{
-			min:     vModel.min,
-			minOpen: vModel.minOpen,
-			max:     vModel.max,
-			maxOpen: vModel.maxOpen,
-		}
+		return value.NewIntRange(vModel.min, vModel.minOpen, vModel.max, vModel.maxOpen)
 	case finalInt:
-		return intValues{[]int{vModel.finalValue}}
+		return value.NewIntValues([]int{vModel.finalValue})
 	}
 }
 
@@ -70,20 +70,12 @@ func (pModel parameterModel) Id() int {
 	return pModel.id
 }
 
-func (pModel parameterModel) toInstance(model Model) Parameter {
-	constraints := make([]constraint, 0)
-	for _, cModel := range model.constraints {
-		if cModel.srcId == pModel.id {
-			newConstraint := createContraint(newFinalCondition(cModel.srcId), newSetValueExecution(cModel.targetId, cModel.targetValue.toInstance()))
-			constraints = append(constraints, newConstraint)
-		}
-	}
-	return Parameter{
-		id:          pModel.id,
-		name:        pModel.name,
-		value:       pModel.value.toInstance(),
-		constraints: constraints,
-	}
+func (pModel parameterModel) toInstance() configuration.InternalParameter {
+	return configuration.NewInternalParameter(
+		pModel.id,
+		pModel.name,
+		pModel.value.toInstance(),
+	)
 }
 
 type constraintModel struct {
