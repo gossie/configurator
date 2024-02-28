@@ -38,9 +38,7 @@ func NewDisableExecution(paramId int) disableExecution {
 func (execution disableExecution) execute(config map[int]*InternalParameter) {
 	param := config[execution.parameterId]
 	param.selectable = false
-	// if change {
-	// 	for _, c := range param.Constraints {
-	// 		c(config)
-	// 	}
-	// }
+	for _, c := range param.Constraints {
+		c(config)
+	}
 }
