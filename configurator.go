@@ -26,7 +26,12 @@ func Start(model Model) configuration1.Configuration {
 			srcParam.AppendConstraint(newSrcConstraint)
 
 			targetParam := parameters[cModel.targetId]
-			newTargetConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.targetId, configuration.IsNot, cModel.targetValue.toInstance()), configuration.NewDisableExecution(cModel.srcId))
+			condition := configuration.NewCompositeCondition(
+				configuration.NewValueCondition(cModel.targetId, configuration.IsImpossible, cModel.targetValue.toInstance()),
+				configuration.Or,
+				configuration.NewDisabledCondition(cModel.targetId),
+			)
+			newTargetConstraint := configuration.CreateContraint(condition, configuration.NewDisableExecution(cModel.srcId))
 			targetParam.AppendConstraint(newTargetConstraint)
 		case setValueIfValue:
 			srcParam := parameters[cModel.srcId]
@@ -40,7 +45,14 @@ func Start(model Model) configuration1.Configuration {
 		}
 	}
 
-	return configuration.NewInternalConfiguration(parameters)
+	config := configuration.NewInternalConfiguration(parameters)
+	for _, p := range config.Parameters {
+		for _, c := range p.Constraints {
+			c(config.Parameters)
+		}
+	}
+
+	return config
 }
 
 func SetValue(config configuration1.Configuration, parameterId int, valueToSet string) (configuration1.Configuration, error) {

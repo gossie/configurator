@@ -12,15 +12,15 @@ func Is(v1, v2 value.Value) bool {
 	return v1.Subsumes(v2) && v2.Subsumes(v1)
 }
 
-func IsNot(v1, v2 value.Value) bool {
-	return !v1.Subsumes(v2) || !v2.Subsumes(v1)
+func IsImpossible(v1, v2 value.Value) bool {
+	return !v1.Subsumes(v2)
 }
 
 type logicalOperator int
 
 const (
-	and logicalOperator = iota
-	or
+	And logicalOperator = iota
+	Or
 )
 
 type condition interface {
@@ -40,9 +40,9 @@ func (composite compositeCondition) fulfilled(config map[int]*InternalParameter)
 	switch composite.operator {
 	default:
 		panic(fmt.Sprintf("unknown operator: %v", composite.operator))
-	case and:
+	case And:
 		return composite.left.fulfilled(config) && composite.right.fulfilled(config)
-	case or:
+	case Or:
 		return composite.left.fulfilled(config) || composite.right.fulfilled(config)
 	}
 }
@@ -58,6 +58,19 @@ func NewFinalCondition(paramId int) parameterFinalCondition {
 func (condition parameterFinalCondition) fulfilled(config map[int]*InternalParameter) bool {
 	param := config[condition.parameterId]
 	return param.Final()
+}
+
+type parameterDisabledCondition struct {
+	parameterId int
+}
+
+func NewDisabledCondition(paramId int) parameterDisabledCondition {
+	return parameterDisabledCondition{paramId}
+}
+
+func (condition parameterDisabledCondition) fulfilled(config map[int]*InternalParameter) bool {
+	param := config[condition.parameterId]
+	return !param.Selectable()
 }
 
 type parameterValueCondition struct {

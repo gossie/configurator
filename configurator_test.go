@@ -275,3 +275,18 @@ func TestThatConstraintImpactIsReverted(t *testing.T) {
 	checkFinalParameter(p1, errP1, 1, "P1", "5", t)
 	checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
 }
+
+func TestThatConstraintAreCheckedWhenConfigurationStarts(t *testing.T) {
+	model := configurator.Model{}
+	pModel1 := model.AddParameter("P1", configurator.NewFinalIntModel(7))
+	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddConstraint(configurator.NewSetValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel2.Id(), configurator.NewFinalIntModel(3)))
+
+	configuration := configurator.Start(model)
+
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
+
+	checkFinalParameter(p1, errP1, 1, "P1", "7", t)
+	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
+}
