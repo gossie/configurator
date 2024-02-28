@@ -9,6 +9,32 @@ import (
 	"github.com/gossie/configurator/internal/value"
 )
 
+func addConstraintsForSetValueIfFinal(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.srcId]
+	forwardConstraint := configuration.CreateContraint(configuration.NewFinalCondition(cModel.srcId), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+	srcParam.AppendConstraint(forwardConstraint)
+
+	targetParam := parameters[cModel.targetId]
+	condition := configuration.NewCompositeCondition(
+		configuration.NewValueCondition(cModel.targetId, configuration.IsImpossible, cModel.targetValue.toInstance()),
+		configuration.Or,
+		configuration.NewDisabledCondition(cModel.targetId),
+	)
+	backwardConstraint := configuration.CreateContraint(condition, configuration.NewDisableExecution(cModel.srcId))
+	targetParam.AppendConstraint(backwardConstraint)
+}
+
+func addConstraintsForSetValueIfValue(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.srcId]
+	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.srcId, configuration.Is, cModel.srcValue.toInstance()), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+	srcParam.AppendConstraint(newSrcConstraint)
+
+	// TODO: exclude src value
+	// targetParam := parameters[cModel.targetId]
+	// newTargetConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.targetId, configuration.IsNot, cModel.targetValue.toInstance()), configuration.NewDisableExecution(cModel.srcId))
+	// targetParam.AppendConstraint(newTargetConstraint)
+}
+
 func Start(model Model) configuration1.Configuration {
 	parameters := make(map[int]*configuration.InternalParameter, len(model.parameters))
 	for _, pModel := range model.parameters {
@@ -21,27 +47,9 @@ func Start(model Model) configuration1.Configuration {
 		default:
 			panic(fmt.Sprintf("unknown constraint type %v", cModel.constraintType))
 		case setValueIfFinal:
-			srcParam := parameters[cModel.srcId]
-			newSrcConstraint := configuration.CreateContraint(configuration.NewFinalCondition(cModel.srcId), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
-			srcParam.AppendConstraint(newSrcConstraint)
-
-			targetParam := parameters[cModel.targetId]
-			condition := configuration.NewCompositeCondition(
-				configuration.NewValueCondition(cModel.targetId, configuration.IsImpossible, cModel.targetValue.toInstance()),
-				configuration.Or,
-				configuration.NewDisabledCondition(cModel.targetId),
-			)
-			newTargetConstraint := configuration.CreateContraint(condition, configuration.NewDisableExecution(cModel.srcId))
-			targetParam.AppendConstraint(newTargetConstraint)
+			addConstraintsForSetValueIfFinal(cModel, parameters)
 		case setValueIfValue:
-			srcParam := parameters[cModel.srcId]
-			newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.srcId, configuration.Is, cModel.srcValue.toInstance()), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
-			srcParam.AppendConstraint(newSrcConstraint)
-
-			// TODO: exclude src value
-			// targetParam := parameters[cModel.targetId]
-			// newTargetConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.targetId, configuration.IsNot, cModel.targetValue.toInstance()), configuration.NewDisableExecution(cModel.srcId))
-			// targetParam.AppendConstraint(newTargetConstraint)
+			addConstraintsForSetValueIfValue(cModel, parameters)
 		}
 	}
 
