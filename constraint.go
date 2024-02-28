@@ -68,7 +68,12 @@ func newSetValueExecution(paramId int, value value) setValueExecution {
 
 func (execution setValueExecution) execute(configuration Configuration) {
 	param, _ := configuration.mutableParameterById(execution.parameterId)
-	param.SetValue(execution.value)
+	change, _ := param.SetValue(execution.value)
+	if change {
+		for _, c := range param.constraints {
+			c(configuration)
+		}
+	}
 }
 
 type constraint func(configuration Configuration) (bool, error)

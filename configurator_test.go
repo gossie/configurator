@@ -173,3 +173,23 @@ func TestThatRuleIsExecuted(t *testing.T) {
 	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
 	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
 }
+
+func TestThatDependingRulesAreExecuted(t *testing.T) {
+	model := configurator.Model{}
+	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
+	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	pModel3 := model.AddParameter("P3", configurator.NewIntSetModel([]int{1, 2, 3}))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalInt(3)))
+	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), configurator.NewFinalInt(1)))
+
+	configuration := configurator.Start(model)
+	configuration, _ = configurator.SetValue(configuration, 1, "2")
+
+	p1, errP1 := configuration.ParameterById(1)
+	p2, errP2 := configuration.ParameterById(2)
+	p3, errP3 := configuration.ParameterById(3)
+
+	checkFinalParameter(p1, errP1, 1, "P1", "2", t)
+	checkFinalParameter(p2, errP2, 2, "P2", "3", t)
+	checkFinalParameter(p3, errP3, 3, "P3", "1", t)
+}

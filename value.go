@@ -11,7 +11,6 @@ type value interface {
 	possibleValue(aValue value) bool
 	subsumedByRange(other intRange) bool
 	subsumedBySet(other intValues) bool
-	//set(aValue string) (value, error)
 	final() bool
 	String() string
 }
@@ -83,16 +82,6 @@ func (v intRange) subsumedBySet(aValue intValues) bool {
 func (v intRange) subsumedByRange(aValue intRange) bool {
 	return v.min >= aValue.min && v.max <= aValue.max
 }
-
-/*
-	func (v intRange) set(aValue string) (value, error) {
-		if !v.possibleValue(aValue) {
-			return nil, fmt.Errorf("%v is not a possible value for %v", aValue, v)
-		}
-		intValue, _ := strconv.Atoi(aValue)
-		return intRange{min: intValue, minOpen: false, max: intValue, maxOpen: false}, nil
-	}
-*/
 
 func (v intRange) final() bool {
 	return v.min == v.max

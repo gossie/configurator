@@ -25,10 +25,10 @@ func (p Parameter) Value() string {
 	return p.value.String()
 }
 
-func (p *Parameter) SetValue(aValue value) error {
+func (p *Parameter) SetValue(aValue value) (bool, error) {
 	if p.value.possibleValue(aValue) {
 		p.value = aValue
-		return nil
+		return true, nil
 	}
-	return fmt.Errorf("%v is not a possible value for %v", aValue, p.value)
+	return false, fmt.Errorf("%v is not a possible value for %v", aValue, p.value)
 }

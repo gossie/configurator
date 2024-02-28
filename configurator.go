@@ -48,7 +48,7 @@ func SetValue(configuration Configuration, parameterId int, value string) (Confi
 	}
 
 	intValue, _ := strconv.Atoi(value)
-	err = parameter.SetValue(intValues{[]int{intValue}})
+	_, err = parameter.SetValue(intValues{[]int{intValue}})
 	for _, c := range parameter.constraints {
 		c(configuration)
 	}
