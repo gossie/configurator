@@ -83,4 +83,44 @@ func TestSectDRangeWithSet(t *testing.T) {
 	assert.Equal(t, expected, value.SectDRangeWithSet(dRange, set))
 }
 
-// TODO: Tests for range with range and set with set
+func TestSectSetWithSet(t *testing.T) {
+	set1 := value.NewIntValues([]int{5, 9, 15, 17, 19, 25, 30, 35})
+	set2 := value.NewIntValues([]int{4, 9, 16, 17, 18, 25, 31, 37})
+
+	expected := value.NewIntValues([]int{9, 17, 25})
+	assert.Equal(t, expected, value.SectSetWithSet(set1, set2))
+}
+
+func TestSectRangeWithRange1(t *testing.T) {
+	range1 := value.NewIntRange(1, false, 10, false)
+	range2 := value.NewIntRange(-5, false, 5, false)
+
+	expected := value.NewIntRange(1, false, 5, false)
+	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+}
+
+func TestSectRangeWithRange2(t *testing.T) {
+	range1 := value.NewIntRange(1, false, 10, false)
+	range2 := value.NewIntRange(5, false, 15, false)
+
+	expected := value.NewIntRange(5, false, 10, false)
+	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+}
+
+func TestSectRangeWithRange_equal(t *testing.T) {
+	range1 := value.NewIntRange(1, false, 10, false)
+	range2 := value.NewIntRange(1, false, 10, false)
+
+	expected := value.NewIntRange(1, false, 10, false)
+	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+}
+
+func TestSectRangeWithRange_oneSubsumesTheOther(t *testing.T) {
+	range1 := value.NewIntRange(1, false, 10, false)
+	range2 := value.NewIntRange(3, false, 7, false)
+
+	expected := value.NewIntRange(3, false, 7, false)
+	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+}
+
+// TODO sect drange with drange

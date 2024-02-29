@@ -78,7 +78,7 @@ func SectDRangeWithSet(v1 dRange, v2 intValues) Value {
 }
 
 func SectRangeWithRange(v1, v2 IntRange) Value {
-	return NewIntRange(max(v1.min, v2.min), false, min(v1.min, v2.min), false)
+	return NewIntRange(max(v1.min, v2.min), false, min(v1.max, v2.max), false)
 }
 
 func SectSetWithSet(v1, v2 intValues) Value {

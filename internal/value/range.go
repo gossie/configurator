@@ -19,20 +19,25 @@ func NewIntRange(min int, minOpen bool, max int, maxOpen bool) IntRange {
 	}
 }
 
-func (v IntRange) Subsumes(aValue Value) bool {
-	return aValue.subsumedByRange(v)
+func (v IntRange) Subsumes(other Value) bool {
+	return other.subsumedByRange(v)
 }
 
-func (v IntRange) subsumedBySet(aValue intValues) bool {
+func (v IntRange) subsumedBySet(other intValues) bool {
 	return false
 }
 
-func (v IntRange) subsumedByRange(aValue IntRange) bool {
-	return v.min >= aValue.min && v.max <= aValue.max
+func (v IntRange) subsumedByRange(other IntRange) bool {
+	return v.min >= other.min && v.max <= other.max
 }
 
-func (v IntRange) subsumedByDRange(aValue dRange) bool {
-	panic("not yet implemented")
+func (v IntRange) subsumedByDRange(other dRange) bool {
+	for _, r := range other.ranges {
+		if v.subsumedByRange(r) {
+			return true
+		}
+	}
+	return false
 }
 
 func (v IntRange) Sect(other Value) Value {
