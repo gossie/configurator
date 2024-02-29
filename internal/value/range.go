@@ -5,13 +5,13 @@ import (
 	"strconv"
 )
 
-type intRange struct {
+type IntRange struct {
 	min, max         int
 	minOpen, maxOpen bool
 }
 
-func NewIntRange(min int, minOpen bool, max int, maxOpen bool) Value {
-	return intRange{
+func NewIntRange(min int, minOpen bool, max int, maxOpen bool) IntRange {
+	return IntRange{
 		min,
 		max,
 		minOpen,
@@ -19,55 +19,64 @@ func NewIntRange(min int, minOpen bool, max int, maxOpen bool) Value {
 	}
 }
 
-func (v intRange) Subsumes(aValue Value) bool {
-	return aValue.subsumedByRange(v)
+func (v IntRange) Subsumes(other Value) bool {
+	return other.subsumedByRange(v)
 }
 
-func (v intRange) subsumedBySet(aValue intValues) bool {
+func (v IntRange) subsumedBySet(other intValues) bool {
 	return false
 }
 
-func (v intRange) subsumedByRange(aValue intRange) bool {
-	return v.min >= aValue.min && v.max <= aValue.max
+func (v IntRange) subsumedByRange(other IntRange) bool {
+	return v.min >= other.min && v.max <= other.max
 }
 
-func (v intRange) Sect(other Value) Value {
+func (v IntRange) subsumedByDRange(other dRange) bool {
+	for _, r := range other.ranges {
+		if v.subsumedByRange(r) {
+			return true
+		}
+	}
+	return false
+}
+
+func (v IntRange) Sect(other Value) Value {
 	return other.sectWithRange(v)
 }
 
-func (v intRange) sectWithSet(aValue intValues) Value {
-	values := make([]int, 0)
-	for _, intValue := range aValue.values {
-		if v.min <= intValue && v.max >= intValue {
-			values = append(values, intValue)
-		}
-	}
-	return NewIntValues(values)
+func (v IntRange) sectWithSet(other intValues) Value {
+	return SectRangeWithSet(v, other)
 }
 
-func (v intRange) sectWithRange(aValue intRange) Value {
-	return NewIntRange(max(v.min, aValue.min), false, min(v.min, aValue.min), false)
+func (v IntRange) sectWithRange(other IntRange) Value {
+	return SectRangeWithRange(v, other)
 }
 
-func (v intRange) Diff(other Value) Value {
+func (v IntRange) sectWithDRange(other dRange) Value {
+	return SectRangeWithDRange(v, other)
+}
+
+func (v IntRange) Diff(other Value) Value {
 	return other.diffFromRange(v)
 }
 
-func (v intRange) diffFromSet(aValue intValues) Value {
-	// TODO
+func (v IntRange) diffFromSet(aValue intValues) Value {
 	panic("not yet implemented")
 }
 
-func (v intRange) diffFromRange(aValue intRange) Value {
-	// TODO
+func (v IntRange) diffFromRange(aValue IntRange) Value {
 	panic("not yet implemented")
 }
 
-func (v intRange) Final() bool {
+func (v IntRange) diffFromDRange(aValue dRange) Value {
+	panic("not yet implemented")
+}
+
+func (v IntRange) Final() bool {
 	return v.min == v.max
 }
 
-func (v intRange) String() string {
+func (v IntRange) String() string {
 	if v.Final() {
 		return strconv.Itoa(v.min)
 	}

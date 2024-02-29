@@ -295,28 +295,28 @@ func TestThatConstraintExcludesValues(t *testing.T) {
 	model := configurator.Model{}
 	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
 	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	// pModel3 := model.AddParameter("P3", configurator.NewIntRangeModel(10, false, 20, false))
+	pModel3 := model.AddParameter("P3", configurator.NewIntRangeModel(10, false, 20, false))
 	model.AddConstraint(configurator.NewExcludeValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel2.Id(), configurator.NewFinalIntModel(2)))
-	// model.AddConstraint(configurator.NewExcludeValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel3.Id(), configurator.NewFinalIntModel(15)))
+	model.AddConstraint(configurator.NewExcludeValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel3.Id(), configurator.NewFinalIntModel(15)))
 
 	configuration := configurator.Start(model)
 	configuration, _ = configurator.SetValue(configuration, 1, "7")
 
 	p1, errP1 := configuration.ParameterById(1)
 	p2, errP2 := configuration.ParameterById(2)
-	// p3, errP3 := configuration.ParameterById(3)
+	p3, errP3 := configuration.ParameterById(3)
 
 	checkFinalParameter(p1, errP1, 1, "P1", "7", t)
 	checkOpenParameter(p2, errP2, 2, "P2", "{1,3}", t)
-	// checkOpenParameter(p3, errP3, 3, "P3", "[[10;14][16;20]]", t)
+	checkOpenParameter(p3, errP3, 3, "P3", "[[10;14][16;20]]", t)
 
 	configuration, _ = configurator.SetValue(configuration, 1, "5")
 
 	p1, errP1 = configuration.ParameterById(1)
 	p2, errP2 = configuration.ParameterById(2)
-	// p3, errP3 = configuration.ParameterById(3)
+	p3, errP3 = configuration.ParameterById(3)
 
 	checkFinalParameter(p1, errP1, 1, "P1", "5", t)
 	checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
-	// checkOpenParameter(p3, errP3, 3, "P3", "[10;20]", t)
+	checkOpenParameter(p3, errP3, 3, "P3", "[10;20]", t)
 }
