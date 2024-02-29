@@ -310,13 +310,13 @@ func TestThatConstraintExcludesValues(t *testing.T) {
 	checkOpenParameter(p2, errP2, 2, "P2", "{1,3}", t)
 	checkOpenParameter(p3, errP3, 3, "P3", "[[10;14][16;20]]", t)
 
-	// configuration, _ = configurator.SetValue(configuration, 1, "5")
+	configuration, _ = configurator.SetValue(configuration, 1, "5")
 
-	// p1, errP1 = configuration.ParameterById(1)
-	// p2, errP2 = configuration.ParameterById(2)
-	// p3, errP3 = configuration.ParameterById(3)
+	p1, errP1 = configuration.ParameterById(1)
+	p2, errP2 = configuration.ParameterById(2)
+	p3, errP3 = configuration.ParameterById(3)
 
-	// checkFinalParameter(p1, errP1, 1, "P1", "5", t)
-	// checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
-	// checkOpenParameter(p3, errP3, 3, "P3", "[10;20]", t)
+	checkFinalParameter(p1, errP1, 1, "P1", "5", t)
+	checkOpenParameter(p2, errP2, 2, "P2", "{1,2,3}", t)
+	checkOpenParameter(p3, errP3, 3, "P3", "[10;20]", t)
 }
