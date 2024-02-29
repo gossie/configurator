@@ -27,13 +27,17 @@ func (v intValues) subsumedBySet(aValue intValues) bool {
 	return true
 }
 
-func (v intValues) subsumedByRange(aValue intRange) bool {
+func (v intValues) subsumedByRange(aValue IntRange) bool {
 	for _, intValue := range v.values {
 		if intValue < aValue.min || intValue > aValue.max {
 			return false
 		}
 	}
 	return true
+}
+
+func (v intValues) subsumedByDRange(aValue dRange) bool {
+	panic("not yet implemented")
 }
 
 func (v intValues) Sect(other Value) Value {
@@ -50,7 +54,7 @@ func (v intValues) sectWithSet(aValue intValues) Value {
 	return NewIntValues(values)
 }
 
-func (v intValues) sectWithRange(aValue intRange) Value {
+func (v intValues) sectWithRange(aValue IntRange) Value {
 	values := make([]int, 0)
 	for _, intValue := range v.values {
 		if aValue.min <= intValue && aValue.max >= intValue {
@@ -58,6 +62,10 @@ func (v intValues) sectWithRange(aValue intRange) Value {
 		}
 	}
 	return NewIntValues(values)
+}
+
+func (v intValues) sectWithDRange(aValue dRange) Value {
+	panic("not yet implemented")
 }
 
 func (v intValues) Diff(other Value) Value {
@@ -74,8 +82,18 @@ func (v intValues) diffFromSet(aValue intValues) Value {
 	return NewIntValues(values)
 }
 
-func (v intValues) diffFromRange(aValue intRange) Value {
-	// TODO
+func (v intValues) diffFromRange(aValue IntRange) Value {
+	ranges := make([]IntRange, 0)
+	lowerBound := aValue.min
+	for _, intValue := range v.values {
+		ranges = append(ranges, NewIntRange(lowerBound, false, intValue-1, false))
+		lowerBound = intValue + 1
+	}
+	ranges = append(ranges, NewIntRange(lowerBound, false, aValue.max, false))
+	return NewDRange(ranges)
+}
+
+func (v intValues) diffFromDRange(aValue dRange) Value {
 	panic("not yet implemented")
 }
 

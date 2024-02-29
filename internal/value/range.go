@@ -5,13 +5,13 @@ import (
 	"strconv"
 )
 
-type intRange struct {
+type IntRange struct {
 	min, max         int
 	minOpen, maxOpen bool
 }
 
-func NewIntRange(min int, minOpen bool, max int, maxOpen bool) Value {
-	return intRange{
+func NewIntRange(min int, minOpen bool, max int, maxOpen bool) IntRange {
+	return IntRange{
 		min,
 		max,
 		minOpen,
@@ -19,23 +19,27 @@ func NewIntRange(min int, minOpen bool, max int, maxOpen bool) Value {
 	}
 }
 
-func (v intRange) Subsumes(aValue Value) bool {
+func (v IntRange) Subsumes(aValue Value) bool {
 	return aValue.subsumedByRange(v)
 }
 
-func (v intRange) subsumedBySet(aValue intValues) bool {
+func (v IntRange) subsumedBySet(aValue intValues) bool {
 	return false
 }
 
-func (v intRange) subsumedByRange(aValue intRange) bool {
+func (v IntRange) subsumedByRange(aValue IntRange) bool {
 	return v.min >= aValue.min && v.max <= aValue.max
 }
 
-func (v intRange) Sect(other Value) Value {
+func (v IntRange) subsumedByDRange(aValue dRange) bool {
+	panic("not yet implemented")
+}
+
+func (v IntRange) Sect(other Value) Value {
 	return other.sectWithRange(v)
 }
 
-func (v intRange) sectWithSet(aValue intValues) Value {
+func (v IntRange) sectWithSet(aValue intValues) Value {
 	values := make([]int, 0)
 	for _, intValue := range aValue.values {
 		if v.min <= intValue && v.max >= intValue {
@@ -45,29 +49,35 @@ func (v intRange) sectWithSet(aValue intValues) Value {
 	return NewIntValues(values)
 }
 
-func (v intRange) sectWithRange(aValue intRange) Value {
+func (v IntRange) sectWithRange(aValue IntRange) Value {
 	return NewIntRange(max(v.min, aValue.min), false, min(v.min, aValue.min), false)
 }
 
-func (v intRange) Diff(other Value) Value {
+func (v IntRange) sectWithDRange(other dRange) Value {
+	return sectRangeWithDRange(v, other)
+}
+
+func (v IntRange) Diff(other Value) Value {
 	return other.diffFromRange(v)
 }
 
-func (v intRange) diffFromSet(aValue intValues) Value {
-	// TODO
+func (v IntRange) diffFromSet(aValue intValues) Value {
 	panic("not yet implemented")
 }
 
-func (v intRange) diffFromRange(aValue intRange) Value {
-	// TODO
+func (v IntRange) diffFromRange(aValue IntRange) Value {
 	panic("not yet implemented")
 }
 
-func (v intRange) Final() bool {
+func (v IntRange) diffFromDRange(aValue dRange) Value {
+	panic("not yet implemented")
+}
+
+func (v IntRange) Final() bool {
 	return v.min == v.max
 }
 
-func (v intRange) String() string {
+func (v IntRange) String() string {
 	if v.Final() {
 		return strconv.Itoa(v.min)
 	}
