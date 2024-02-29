@@ -1,5 +1,7 @@
 package value
 
+import "slices"
+
 type Value interface {
 	Subsumes(aValue Value) bool
 	subsumedByRange(other IntRange) bool
@@ -17,7 +19,7 @@ type Value interface {
 	String() string
 }
 
-func sectRangeWithDRange(v1 IntRange, v2 dRange) Value {
+func SectRangeWithDRange(v1 IntRange, v2 dRange) Value {
 	ranges := make([]IntRange, 0)
 	var currentLowerBound int
 	searchingLowerBound := true
@@ -50,4 +52,41 @@ func sectRangeWithDRange(v1 IntRange, v2 dRange) Value {
 		return ranges[0]
 	}
 	return NewDRange(ranges)
+}
+
+func SectRangeWithSet(v1 IntRange, v2 intValues) Value {
+	values := make([]int, 0)
+	for _, intValue := range v2.values {
+		if intValue >= v1.min && intValue <= v1.max {
+			values = append(values, intValue)
+		}
+	}
+	return intValues{values}
+}
+
+func SectDRangeWithSet(v1 dRange, v2 intValues) Value {
+	values := make([]int, 0)
+	for _, intValue := range v2.values {
+		for _, r := range v1.ranges {
+			if intValue >= r.min && intValue <= r.max {
+				values = append(values, intValue)
+				break
+			}
+		}
+	}
+	return intValues{values}
+}
+
+func SectRangeWithRange(v1, v2 IntRange) Value {
+	return NewIntRange(max(v1.min, v2.min), false, min(v1.min, v2.min), false)
+}
+
+func SectSetWithSet(v1, v2 intValues) Value {
+	values := make([]int, 0)
+	for _, intValue := range v1.values {
+		if slices.Contains(v2.values, intValue) {
+			values = append(values, intValue)
+		}
+	}
+	return NewIntValues(values)
 }

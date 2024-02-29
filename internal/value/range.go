@@ -39,22 +39,16 @@ func (v IntRange) Sect(other Value) Value {
 	return other.sectWithRange(v)
 }
 
-func (v IntRange) sectWithSet(aValue intValues) Value {
-	values := make([]int, 0)
-	for _, intValue := range aValue.values {
-		if v.min <= intValue && v.max >= intValue {
-			values = append(values, intValue)
-		}
-	}
-	return NewIntValues(values)
+func (v IntRange) sectWithSet(other intValues) Value {
+	return SectRangeWithSet(v, other)
 }
 
-func (v IntRange) sectWithRange(aValue IntRange) Value {
-	return NewIntRange(max(v.min, aValue.min), false, min(v.min, aValue.min), false)
+func (v IntRange) sectWithRange(other IntRange) Value {
+	return SectRangeWithRange(v, other)
 }
 
 func (v IntRange) sectWithDRange(other dRange) Value {
-	return sectRangeWithDRange(v, other)
+	return SectRangeWithDRange(v, other)
 }
 
 func (v IntRange) Diff(other Value) Value {

@@ -10,7 +10,7 @@ type intValues struct {
 	values []int
 }
 
-func NewIntValues(values []int) Value {
+func NewIntValues(values []int) intValues {
 	return intValues{values}
 }
 
@@ -44,28 +44,16 @@ func (v intValues) Sect(other Value) Value {
 	return other.sectWithSet(v)
 }
 
-func (v intValues) sectWithSet(aValue intValues) Value {
-	values := make([]int, 0)
-	for _, intValue := range v.values {
-		if slices.Contains(aValue.values, intValue) {
-			values = append(values, intValue)
-		}
-	}
-	return NewIntValues(values)
+func (v intValues) sectWithSet(other intValues) Value {
+	return SectSetWithSet(v, other)
 }
 
-func (v intValues) sectWithRange(aValue IntRange) Value {
-	values := make([]int, 0)
-	for _, intValue := range v.values {
-		if aValue.min <= intValue && aValue.max >= intValue {
-			values = append(values, intValue)
-		}
-	}
-	return NewIntValues(values)
+func (v intValues) sectWithRange(other IntRange) Value {
+	return SectRangeWithSet(other, v)
 }
 
-func (v intValues) sectWithDRange(aValue dRange) Value {
-	panic("not yet implemented")
+func (v intValues) sectWithDRange(other dRange) Value {
+	return SectDRangeWithSet(other, v)
 }
 
 func (v intValues) Diff(other Value) Value {

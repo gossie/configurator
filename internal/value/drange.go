@@ -38,12 +38,12 @@ func (v dRange) Sect(other Value) Value {
 	return other.sectWithDRange(v)
 }
 
-func (v dRange) sectWithSet(aValue intValues) Value {
-	panic("not yet implemente")
+func (v dRange) sectWithSet(other intValues) Value {
+	return SectDRangeWithSet(v, other)
 }
 
 func (v dRange) sectWithRange(other IntRange) Value {
-	return sectRangeWithDRange(other, v)
+	return SectRangeWithDRange(other, v)
 }
 
 func (v dRange) sectWithDRange(aValue dRange) Value {
