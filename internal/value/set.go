@@ -72,9 +72,9 @@ func (v intValues) Diff(other Value) Value {
 	return other.diffFromSet(v)
 }
 
-func (v intValues) diffFromSet(aValue intValues) Value {
+func (v intValues) diffFromSet(other intValues) Value {
 	values := make([]int, 0)
-	for _, intValue := range aValue.values {
+	for _, intValue := range other.values {
 		if !slices.Contains(v.values, intValue) {
 			values = append(values, intValue)
 		}
@@ -82,14 +82,24 @@ func (v intValues) diffFromSet(aValue intValues) Value {
 	return NewIntValues(values)
 }
 
-func (v intValues) diffFromRange(aValue IntRange) Value {
+func (v intValues) diffFromRange(other IntRange) Value {
 	ranges := make([]IntRange, 0)
-	lowerBound := aValue.min
+	lowerBound := other.min
 	for _, intValue := range v.values {
-		ranges = append(ranges, NewIntRange(lowerBound, false, intValue-1, false))
-		lowerBound = intValue + 1
+		if InRange(other, intValue) {
+			if intValue > lowerBound {
+				ranges = append(ranges, NewIntRange(lowerBound, false, intValue-1, false))
+			}
+			lowerBound = intValue + 1
+		}
 	}
-	ranges = append(ranges, NewIntRange(lowerBound, false, aValue.max, false))
+	if lowerBound <= other.max {
+		ranges = append(ranges, NewIntRange(lowerBound, false, other.max, false))
+	}
+
+	if len(ranges) == 1 {
+		return ranges[0]
+	}
 	return NewDRange(ranges)
 }
 

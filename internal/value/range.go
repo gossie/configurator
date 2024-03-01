@@ -71,8 +71,30 @@ func (v IntRange) diffFromSet(aValue intValues) Value {
 	panic("not yet implemented")
 }
 
-func (v IntRange) diffFromRange(aValue IntRange) Value {
-	panic("not yet implemented")
+func (v IntRange) diffFromRange(other IntRange) Value {
+	if !intersect(v, other) {
+		return other
+	}
+
+	if other.Subsumes(v) {
+		switch {
+		case v.min == other.min:
+			return NewIntRange(v.max+1, false, other.max, false)
+		case v.max == other.max:
+			return NewIntRange(other.min, false, v.min-1, false)
+		default:
+			return NewDRange([]IntRange{NewIntRange(other.min, false, v.min-1, false), NewIntRange(v.max+1, false, other.max, false)})
+		}
+	}
+
+	newLowerBound := other.min
+	newUpperBound := v.min - 1
+	if InRange(v, other.min) {
+		newLowerBound = v.max + 1
+		newUpperBound = other.max
+	}
+
+	return NewIntRange(newLowerBound, false, newUpperBound, false)
 }
 
 func (v IntRange) diffFromDRange(aValue dRange) Value {
