@@ -2,6 +2,7 @@ package value
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 )
 
@@ -24,7 +25,12 @@ func (v IntRange) Subsumes(other Value) bool {
 }
 
 func (v IntRange) subsumedBySet(other intValues) bool {
-	return false
+	for i := v.min; i <= v.max; i++ {
+		if !slices.Contains(other.values, i) {
+			return false
+		}
+	}
+	return true
 }
 
 func (v IntRange) subsumedByRange(other IntRange) bool {
@@ -49,7 +55,8 @@ func (v IntRange) sectWithSet(other intValues) Value {
 }
 
 func (v IntRange) sectWithRange(other IntRange) Value {
-	return SectRangeWithRange(v, other)
+	intersection, _ := SectRangeWithRange(v, other)
+	return intersection
 }
 
 func (v IntRange) sectWithDRange(other dRange) Value {

@@ -2,6 +2,7 @@ package value
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -17,8 +18,15 @@ func (v dRange) Subsumes(aValue Value) bool {
 	return aValue.subsumedByDRange(v)
 }
 
-func (v dRange) subsumedBySet(aValue intValues) bool {
-	panic("not yet implemente")
+func (v dRange) subsumedBySet(other intValues) bool {
+	for _, r := range v.ranges {
+		for i := r.min; i <= r.max; i++ {
+			if !slices.Contains(other.values, i) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (v dRange) subsumedByRange(other IntRange) bool {
@@ -30,8 +38,13 @@ func (v dRange) subsumedByRange(other IntRange) bool {
 	return true
 }
 
-func (v dRange) subsumedByDRange(aValue dRange) bool {
-	panic("not yet implemente")
+func (v dRange) subsumedByDRange(other dRange) bool {
+	for _, r := range other.ranges {
+		if !r.subsumedByDRange(v) {
+			return false
+		}
+	}
+	return true
 }
 
 func (v dRange) Sect(other Value) Value {
@@ -46,8 +59,9 @@ func (v dRange) sectWithRange(other IntRange) Value {
 	return SectRangeWithDRange(other, v)
 }
 
-func (v dRange) sectWithDRange(aValue dRange) Value {
-	panic("not yet implemente")
+func (v dRange) sectWithDRange(other dRange) Value {
+	intersection, _ := SectDRangeWithDRange(v, other)
+	return intersection
 }
 
 func (v dRange) Diff(other Value) Value {

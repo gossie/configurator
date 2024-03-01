@@ -14,30 +14,42 @@ func NewIntValues(values []int) intValues {
 	return intValues{values}
 }
 
-func (v intValues) Subsumes(aValue Value) bool {
-	return aValue.subsumedBySet(v)
+func (v intValues) Subsumes(other Value) bool {
+	return other.subsumedBySet(v)
 }
 
-func (v intValues) subsumedBySet(aValue intValues) bool {
+func (v intValues) subsumedBySet(other intValues) bool {
 	for _, intValue := range v.values {
-		if !slices.Contains(aValue.values, intValue) {
+		if !slices.Contains(other.values, intValue) {
 			return false
 		}
 	}
 	return true
 }
 
-func (v intValues) subsumedByRange(aValue IntRange) bool {
+func (v intValues) subsumedByRange(other IntRange) bool {
 	for _, intValue := range v.values {
-		if intValue < aValue.min || intValue > aValue.max {
+		if !InRange(other, intValue) {
 			return false
 		}
 	}
 	return true
 }
 
-func (v intValues) subsumedByDRange(aValue dRange) bool {
-	panic("not yet implemented")
+func (v intValues) subsumedByDRange(other dRange) bool {
+	for _, intValue := range v.values {
+		found := false
+		for _, r := range other.ranges {
+			if InRange(r, intValue) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 func (v intValues) Sect(other Value) Value {
