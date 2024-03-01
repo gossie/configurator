@@ -50,6 +50,42 @@ func TestThatSetDoesNotSubsumeRange(t *testing.T) {
 	assert.False(t, set.Subsumes(aRange))
 }
 
+func TestThatRangeIsSubtractedFromSet(t *testing.T) {
+	set := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+	r := value.NewIntRange(3, false, 5, false)
+
+	expected := value.NewIntValues([]int{1, 2, 6, 7})
+
+	assert.Equal(t, expected, set.Diff(r))
+}
+
+func TestThatRangeIsSubtractedFromSet_noIntersection(t *testing.T) {
+	set := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+	r := value.NewIntRange(8, false, 16, false)
+
+	expected := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+
+	assert.Equal(t, expected, set.Diff(r))
+}
+
+func TestThatDRangeIsSubtractedFromSet(t *testing.T) {
+	set := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+	dRange := value.NewDRange([]value.IntRange{value.NewIntRange(-10, false, 2, false), value.NewIntRange(6, false, 16, false)})
+
+	expected := value.NewIntValues([]int{3, 4, 5})
+
+	assert.Equal(t, expected, set.Diff(dRange))
+}
+
+func TestThatDRangeIsSubtractedFromSet_noIntersection(t *testing.T) {
+	set := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+	dRange := value.NewDRange([]value.IntRange{value.NewIntRange(-10, false, 0, false), value.NewIntRange(8, false, 16, false)})
+
+	expected := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
+
+	assert.Equal(t, expected, set.Diff(dRange))
+}
+
 func TestSetString(t *testing.T) {
 	set := value.NewIntValues([]int{1, 2, 3, 4, 5, 6, 7})
 	assert.Equal(t, "{1,2,3,4,5,6,7}", set.String())

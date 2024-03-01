@@ -69,7 +69,20 @@ func (v dRange) Diff(other Value) Value {
 }
 
 func (v dRange) diffFromSet(other intValues) Value {
-	panic("not yet implemented")
+	values := make([]int, 0)
+	for _, intValue := range other.values {
+		found := false
+		for _, r := range v.ranges {
+			if InRange(r, intValue) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			values = append(values, intValue)
+		}
+	}
+	return NewIntValues(values)
 }
 
 func (v dRange) diffFromRange(other IntRange) Value {
@@ -93,7 +106,7 @@ func (v dRange) diffFromRange(other IntRange) Value {
 }
 
 func (v dRange) diffFromDRange(other dRange) Value {
-	panic("not yet implemented")
+	panic("implement me")
 }
 
 func (v dRange) Final() bool {

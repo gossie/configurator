@@ -103,8 +103,21 @@ func (v intValues) diffFromRange(other IntRange) Value {
 	return NewDRange(ranges)
 }
 
-func (v intValues) diffFromDRange(aValue dRange) Value {
-	panic("not yet implemented")
+func (v intValues) diffFromDRange(other dRange) Value {
+	ranges := make([]IntRange, 0)
+	for _, r := range other.ranges {
+		tmp := r.Diff(v)
+		if tmpRange, ok := tmp.(IntRange); ok {
+			ranges = append(ranges, tmpRange)
+		} else if tmpDRange, ok := tmp.(dRange); ok {
+			ranges = append(ranges, tmpDRange.ranges...)
+		}
+	}
+
+	if len(ranges) == 1 {
+		return ranges[0]
+	}
+	return NewDRange(ranges)
 }
 
 func (v intValues) Final() bool {
