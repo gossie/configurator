@@ -68,15 +68,31 @@ func (v dRange) Diff(other Value) Value {
 	return other.diffFromDRange(v)
 }
 
-func (v dRange) diffFromSet(aValue intValues) Value {
+func (v dRange) diffFromSet(other intValues) Value {
 	panic("not yet implemented")
 }
 
-func (v dRange) diffFromRange(aValue IntRange) Value {
-	panic("not yet implemented")
+func (v dRange) diffFromRange(other IntRange) Value {
+	result := make([]IntRange, 0)
+	rangeToProcess := other
+	for _, r := range v.ranges {
+		tmp := rangeToProcess.Diff(r)
+		if tmpRange, ok := tmp.(IntRange); ok {
+			rangeToProcess = tmpRange
+		} else if tmpDRange, ok := tmp.(dRange); ok {
+			result = append(result, tmpDRange.ranges[0])
+			rangeToProcess = tmpDRange.ranges[1]
+		}
+	}
+	result = append(result, rangeToProcess)
+
+	if len(result) == 1 {
+		return result[0]
+	}
+	return NewDRange(result)
 }
 
-func (v dRange) diffFromDRange(aValue dRange) Value {
+func (v dRange) diffFromDRange(other dRange) Value {
 	panic("not yet implemented")
 }
 

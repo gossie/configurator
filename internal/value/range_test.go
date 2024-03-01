@@ -146,6 +146,24 @@ func TestThatRangeIsSubtractedFromRange_noIntersection(t *testing.T) {
 	assert.Equal(t, expected, r1.Diff(r2))
 }
 
+func TestThatDRangeIsSubtractedFromRange(t *testing.T) {
+	r := value.NewIntRange(7, false, 27, false)
+	dRange := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 9, false), value.NewIntRange(15, false, 17, false), value.NewIntRange(25, false, 30, false)})
+
+	expected := value.NewDRange([]value.IntRange{value.NewIntRange(10, false, 14, false), value.NewIntRange(18, false, 24, false)})
+
+	assert.Equal(t, expected, r.Diff(dRange))
+}
+
+func TestThatDRangeIsSubtractedFromRange_noIntersection(t *testing.T) {
+	r := value.NewIntRange(7, false, 17, false)
+	dRange := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 5, false), value.NewIntRange(20, false, 30, false)})
+
+	expected := value.NewIntRange(7, false, 17, false)
+
+	assert.Equal(t, expected, r.Diff(dRange))
+}
+
 func TestRangeString_closed(t *testing.T) {
 	r := value.NewIntRange(7, false, 17, false)
 	assert.Equal(t, "[7;17]", r.String())
