@@ -2,6 +2,7 @@ package configurator
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	configuration1 "github.com/gossie/configurator/configuration"
@@ -52,14 +53,14 @@ func Start(model Model) configuration1.Configuration {
 
 	for _, cModel := range model.constraints {
 		switch cModel.constraintType {
-		default:
-			panic(fmt.Sprintf("unknown constraint type %v", cModel.constraintType))
 		case setValueIfFinal:
 			addConstraintsForSetValueIfFinal(cModel, parameters)
 		case setValueIfValue:
 			addConstraintsForSetValueIfValue(cModel, parameters)
 		case excludeValueIfValue:
 			addConstraintsForExcludeValueIfValue(cModel, parameters)
+		default:
+			log.Default().Println("unknown constraint type", cModel.constraintType)
 		}
 	}
 

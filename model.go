@@ -49,14 +49,14 @@ func NewFinalIntModel(value int) valueModel {
 
 func (vModel valueModel) toInstance() value.Value {
 	switch vModel.valueType {
-	default:
-		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
 	case intSetType:
 		return value.NewIntValues(vModel.values)
 	case intRangeType:
 		return value.NewIntRange(vModel.min, vModel.minOpen, vModel.max, vModel.maxOpen)
 	case finalInt:
 		return value.NewIntValues([]int{vModel.finalValue})
+	default:
+		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
 	}
 }
 

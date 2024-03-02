@@ -106,7 +106,64 @@ func (v dRange) diffFromRange(other IntRange) Value {
 }
 
 func (v dRange) diffFromDRange(other dRange) Value {
-	panic("implement me")
+	result := make([]IntRange, 0)
+
+	i, j := 0, 0
+	r1 := other.ranges[i]
+	r2 := v.ranges[j]
+	for i < len(other.ranges) && j < len(v.ranges) {
+		if !intersect(r1, r2) {
+			switch {
+			case r1.max < r2.min:
+				result = append(result, r1)
+				i++
+				if i < len(other.ranges) {
+					r1 = other.ranges[i]
+				}
+			case r2.max < r1.min:
+				j++
+				if j < len(v.ranges) {
+					r2 = v.ranges[j]
+				}
+			}
+			continue
+		}
+
+		diff := r1.Diff(r2)
+		if diffRange, ok := diff.(IntRange); ok {
+			switch {
+			case diffRange.max < r2.min:
+				result = append(result, diffRange)
+				i++
+				if i < len(other.ranges) {
+					r1 = other.ranges[i]
+				}
+			case r2.max < diffRange.min:
+				r1 = diffRange
+				j++
+				if j < len(v.ranges) {
+					r2 = v.ranges[j]
+				}
+			}
+			continue
+		}
+
+		if diffDRange, ok := diff.(dRange); ok {
+			result = append(result, diffDRange.ranges[0])
+			r1 = diffDRange.ranges[1]
+			j++
+			if j < len(v.ranges) {
+				r2 = v.ranges[j]
+			}
+			continue
+		}
+	}
+
+	if i < len(other.ranges) {
+		result = append(result, other.ranges[i:]...)
+	}
+
+	return NewDRange(result)
 }
 
 func (v dRange) Final() bool {

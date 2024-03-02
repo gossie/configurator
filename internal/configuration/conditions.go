@@ -38,12 +38,12 @@ func NewCompositeCondition(left condition, op logicalOperator, right condition) 
 
 func (composite compositeCondition) fulfilled(config map[int]*InternalParameter) bool {
 	switch composite.operator {
-	default:
-		panic(fmt.Sprintf("unknown operator: %v", composite.operator))
 	case And:
 		return composite.left.fulfilled(config) && composite.right.fulfilled(config)
 	case Or:
 		return composite.left.fulfilled(config) || composite.right.fulfilled(config)
+	default:
+		panic(fmt.Sprintf("unknown operator: %v", composite.operator))
 	}
 }
 
