@@ -1,7 +1,7 @@
 package configuration
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/gossie/configurator/internal/value"
 )
@@ -43,7 +43,8 @@ func (composite compositeCondition) fulfilled(config map[int]*InternalParameter)
 	case Or:
 		return composite.left.fulfilled(config) || composite.right.fulfilled(config)
 	default:
-		panic(fmt.Sprintf("unknown operator: %v", composite.operator))
+		log.Default().Println("unknown operator:", composite.operator)
+		return false
 	}
 }
 

@@ -1,7 +1,7 @@
 package configurator
 
 import (
-	"strconv"
+	"log"
 
 	"github.com/gossie/configurator/internal/configuration"
 	"github.com/gossie/configurator/internal/value"
@@ -56,7 +56,8 @@ func (vModel valueModel) toInstance() value.Value {
 	case finalInt:
 		return value.NewIntValues([]int{vModel.finalValue})
 	default:
-		panic("unknown value type " + strconv.Itoa(int(vModel.valueType)))
+		log.Default().Println("unknown value type", vModel.valueType)
+		return nil
 	}
 }
 
