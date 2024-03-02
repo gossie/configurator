@@ -96,7 +96,10 @@ func TestSectRangeWithRange1(t *testing.T) {
 	range2 := value.NewIntRange(-5, false, 5, false)
 
 	expected := value.NewIntRange(1, false, 5, false)
-	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+	actual, err := value.SectRangeWithRange(range1, range2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSectRangeWithRange2(t *testing.T) {
@@ -104,7 +107,10 @@ func TestSectRangeWithRange2(t *testing.T) {
 	range2 := value.NewIntRange(5, false, 15, false)
 
 	expected := value.NewIntRange(5, false, 10, false)
-	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+	actual, err := value.SectRangeWithRange(range1, range2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSectRangeWithRange_equal(t *testing.T) {
@@ -112,7 +118,10 @@ func TestSectRangeWithRange_equal(t *testing.T) {
 	range2 := value.NewIntRange(1, false, 10, false)
 
 	expected := value.NewIntRange(1, false, 10, false)
-	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+	actual, err := value.SectRangeWithRange(range1, range2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }
 
 func TestSectRangeWithRange_oneSubsumesTheOther(t *testing.T) {
@@ -120,7 +129,58 @@ func TestSectRangeWithRange_oneSubsumesTheOther(t *testing.T) {
 	range2 := value.NewIntRange(3, false, 7, false)
 
 	expected := value.NewIntRange(3, false, 7, false)
-	assert.Equal(t, expected, value.SectRangeWithRange(range1, range2))
+	actual, err := value.SectRangeWithRange(range1, range2)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
 }
 
-// TODO sect drange with drange
+func TestSectRangeWithRange_noResult(t *testing.T) {
+	range1 := value.NewIntRange(1, false, 10, false)
+	range2 := value.NewIntRange(11, false, 20, false)
+
+	_, err := value.SectRangeWithRange(range1, range2)
+
+	assert.Error(t, err)
+}
+
+func TestSectDrangeWithDRange_oneIntersectionEach(t *testing.T) {
+	dRange1 := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 10, false), value.NewIntRange(20, false, 30, false)})
+	dRange2 := value.NewDRange([]value.IntRange{value.NewIntRange(-5, false, 5, false), value.NewIntRange(25, false, 35, false)})
+
+	expected := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 5, false), value.NewIntRange(25, false, 30, false)})
+	actual, err := value.SectDRangeWithDRange(dRange1, dRange2)
+
+	assert.Equal(t, expected, actual)
+	assert.NoError(t, err)
+}
+
+func TestSectDrangeWithDRange_intersectionWithWithTwoRanges(t *testing.T) {
+	dRange1 := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 10, false), value.NewIntRange(20, false, 30, false)})
+	dRange2 := value.NewDRange([]value.IntRange{value.NewIntRange(5, false, 21, false), value.NewIntRange(25, false, 35, false)})
+
+	expected := value.NewDRange([]value.IntRange{value.NewIntRange(5, false, 10, false), value.NewIntRange(20, false, 21, false), value.NewIntRange(25, false, 30, false)})
+	actual, err := value.SectDRangeWithDRange(dRange1, dRange2)
+
+	assert.Equal(t, expected, actual)
+	assert.NoError(t, err)
+}
+
+func TestSectDrangeWithDRange_oneRangeSubsumesAnother(t *testing.T) {
+	dRange1 := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 10, false), value.NewIntRange(20, false, 30, false)})
+	dRange2 := value.NewDRange([]value.IntRange{value.NewIntRange(3, false, 7, false), value.NewIntRange(25, false, 35, false)})
+
+	expected := value.NewDRange([]value.IntRange{value.NewIntRange(3, false, 7, false), value.NewIntRange(25, false, 30, false)})
+	actual, err := value.SectDRangeWithDRange(dRange1, dRange2)
+
+	assert.Equal(t, expected, actual)
+	assert.NoError(t, err)
+}
+
+func TestSectDrangeWithDRange_noIntersection(t *testing.T) {
+	dRange1 := value.NewDRange([]value.IntRange{value.NewIntRange(1, false, 10, false), value.NewIntRange(20, false, 30, false)})
+	dRange2 := value.NewDRange([]value.IntRange{value.NewIntRange(12, false, 15, false), value.NewIntRange(35, false, 40, false)})
+
+	_, err := value.SectDRangeWithDRange(dRange1, dRange2)
+	assert.Error(t, err)
+}

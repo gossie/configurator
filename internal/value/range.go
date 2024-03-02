@@ -2,6 +2,7 @@ package value
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 )
 
@@ -24,7 +25,12 @@ func (v IntRange) Subsumes(other Value) bool {
 }
 
 func (v IntRange) subsumedBySet(other intValues) bool {
-	return false
+	for i := v.min; i <= v.max; i++ {
+		if !slices.Contains(other.values, i) {
+			return false
+		}
+	}
+	return true
 }
 
 func (v IntRange) subsumedByRange(other IntRange) bool {
@@ -49,7 +55,8 @@ func (v IntRange) sectWithSet(other intValues) Value {
 }
 
 func (v IntRange) sectWithRange(other IntRange) Value {
-	return SectRangeWithRange(v, other)
+	intersection, _ := SectRangeWithRange(v, other)
+	return intersection
 }
 
 func (v IntRange) sectWithDRange(other dRange) Value {
@@ -61,15 +68,56 @@ func (v IntRange) Diff(other Value) Value {
 }
 
 func (v IntRange) diffFromSet(aValue intValues) Value {
-	panic("not yet implemented")
+	values := make([]int, 0)
+	for _, intValue := range aValue.values {
+		if !InRange(v, intValue) {
+			values = append(values, intValue)
+		}
+	}
+	return NewIntValues(values)
 }
 
-func (v IntRange) diffFromRange(aValue IntRange) Value {
-	panic("not yet implemented")
+func (v IntRange) diffFromRange(other IntRange) Value {
+	if !intersect(v, other) {
+		return other
+	}
+
+	if other.Subsumes(v) {
+		switch {
+		case v.min == other.min:
+			return NewIntRange(v.max+1, false, other.max, false)
+		case v.max == other.max:
+			return NewIntRange(other.min, false, v.min-1, false)
+		default:
+			return NewDRange([]IntRange{NewIntRange(other.min, false, v.min-1, false), NewIntRange(v.max+1, false, other.max, false)})
+		}
+	}
+
+	newLowerBound := other.min
+	newUpperBound := v.min - 1
+	if InRange(v, other.min) {
+		newLowerBound = v.max + 1
+		newUpperBound = other.max
+	}
+
+	return NewIntRange(newLowerBound, false, newUpperBound, false)
 }
 
-func (v IntRange) diffFromDRange(aValue dRange) Value {
-	panic("not yet implemented")
+func (v IntRange) diffFromDRange(other dRange) Value {
+	result := make([]IntRange, 0)
+	for _, r := range other.ranges {
+		tmp := r.Diff(v)
+		if tmpRange, ok := tmp.(IntRange); ok {
+			result = append(result, tmpRange)
+		} else if tmpDRange, ok := tmp.(dRange); ok {
+			result = append(result, tmpDRange.ranges...)
+		}
+	}
+
+	if len(result) == 1 {
+		return result[0]
+	}
+	return NewDRange(result)
 }
 
 func (v IntRange) Final() bool {

@@ -14,30 +14,42 @@ func NewIntValues(values []int) intValues {
 	return intValues{values}
 }
 
-func (v intValues) Subsumes(aValue Value) bool {
-	return aValue.subsumedBySet(v)
+func (v intValues) Subsumes(other Value) bool {
+	return other.subsumedBySet(v)
 }
 
-func (v intValues) subsumedBySet(aValue intValues) bool {
+func (v intValues) subsumedBySet(other intValues) bool {
 	for _, intValue := range v.values {
-		if !slices.Contains(aValue.values, intValue) {
+		if !slices.Contains(other.values, intValue) {
 			return false
 		}
 	}
 	return true
 }
 
-func (v intValues) subsumedByRange(aValue IntRange) bool {
+func (v intValues) subsumedByRange(other IntRange) bool {
 	for _, intValue := range v.values {
-		if intValue < aValue.min || intValue > aValue.max {
+		if !InRange(other, intValue) {
 			return false
 		}
 	}
 	return true
 }
 
-func (v intValues) subsumedByDRange(aValue dRange) bool {
-	panic("not yet implemented")
+func (v intValues) subsumedByDRange(other dRange) bool {
+	for _, intValue := range v.values {
+		found := false
+		for _, r := range other.ranges {
+			if InRange(r, intValue) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 func (v intValues) Sect(other Value) Value {
@@ -60,9 +72,9 @@ func (v intValues) Diff(other Value) Value {
 	return other.diffFromSet(v)
 }
 
-func (v intValues) diffFromSet(aValue intValues) Value {
+func (v intValues) diffFromSet(other intValues) Value {
 	values := make([]int, 0)
-	for _, intValue := range aValue.values {
+	for _, intValue := range other.values {
 		if !slices.Contains(v.values, intValue) {
 			values = append(values, intValue)
 		}
@@ -70,19 +82,42 @@ func (v intValues) diffFromSet(aValue intValues) Value {
 	return NewIntValues(values)
 }
 
-func (v intValues) diffFromRange(aValue IntRange) Value {
+func (v intValues) diffFromRange(other IntRange) Value {
 	ranges := make([]IntRange, 0)
-	lowerBound := aValue.min
+	lowerBound := other.min
 	for _, intValue := range v.values {
-		ranges = append(ranges, NewIntRange(lowerBound, false, intValue-1, false))
-		lowerBound = intValue + 1
+		if InRange(other, intValue) {
+			if intValue > lowerBound {
+				ranges = append(ranges, NewIntRange(lowerBound, false, intValue-1, false))
+			}
+			lowerBound = intValue + 1
+		}
 	}
-	ranges = append(ranges, NewIntRange(lowerBound, false, aValue.max, false))
+	if lowerBound <= other.max {
+		ranges = append(ranges, NewIntRange(lowerBound, false, other.max, false))
+	}
+
+	if len(ranges) == 1 {
+		return ranges[0]
+	}
 	return NewDRange(ranges)
 }
 
-func (v intValues) diffFromDRange(aValue dRange) Value {
-	panic("not yet implemented")
+func (v intValues) diffFromDRange(other dRange) Value {
+	ranges := make([]IntRange, 0)
+	for _, r := range other.ranges {
+		tmp := r.Diff(v)
+		if tmpRange, ok := tmp.(IntRange); ok {
+			ranges = append(ranges, tmpRange)
+		} else if tmpDRange, ok := tmp.(dRange); ok {
+			ranges = append(ranges, tmpDRange.ranges...)
+		}
+	}
+
+	if len(ranges) == 1 {
+		return ranges[0]
+	}
+	return NewDRange(ranges)
 }
 
 func (v intValues) Final() bool {
