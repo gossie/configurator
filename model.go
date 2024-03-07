@@ -7,17 +7,19 @@ import (
 	"github.com/gossie/configurator/internal/value"
 )
 
-type valueType int
+type ValueType int
 
 const (
-	intSetType valueType = iota
-	intRangeType
-	finalInt
+	IntSetType ValueType = iota
+	IntRangeType
+	FinalInt
+	StringSetType
 )
 
 type valueModel struct {
-	valueType        valueType
-	values           []int
+	valueType        ValueType
+	intValues        []int
+	stringValues     []string
 	min, max         int
 	minOpen, maxOpen bool
 	finalValue       int
@@ -25,14 +27,14 @@ type valueModel struct {
 
 func NewIntSetModel(values []int) valueModel {
 	return valueModel{
-		valueType: intSetType,
-		values:    values,
+		valueType: IntSetType,
+		intValues: values,
 	}
 }
 
 func NewIntRangeModel(min int, minOpen bool, max int, maxOpen bool) valueModel {
 	return valueModel{
-		valueType: intRangeType,
+		valueType: IntRangeType,
 		min:       min,
 		minOpen:   minOpen,
 		max:       max,
@@ -42,18 +44,24 @@ func NewIntRangeModel(min int, minOpen bool, max int, maxOpen bool) valueModel {
 
 func NewFinalIntModel(value int) valueModel {
 	return valueModel{
-		valueType:  finalInt,
+		valueType:  FinalInt,
 		finalValue: value,
 	}
 }
 
 func (vModel valueModel) toInstance() value.Value {
 	switch vModel.valueType {
-	case intSetType:
-		return value.NewIntValues(vModel.values)
-	case intRangeType:
+	case IntSetType:
+		return value.NewIntValues(vModel.intValues)
+	case StringSetType:
+		confValues := make([]int, len(vModel.stringValues))
+		for index := range len(vModel.stringValues) {
+			confValues[index] = index
+		}
+		return value.NewIntValues(confValues)
+	case IntRangeType:
 		return value.NewIntRange(vModel.min, vModel.minOpen, vModel.max, vModel.maxOpen)
-	case finalInt:
+	case FinalInt:
 		return value.NewIntValues([]int{vModel.finalValue})
 	default:
 		log.Default().Println("unknown value type", vModel.valueType)
