@@ -53,11 +53,11 @@ func Start(model Model) configuration1.Configuration {
 
 	for _, cModel := range model.constraints {
 		switch cModel.constraintType {
-		case setValueIfFinal:
+		case SetValueIfFinal:
 			addConstraintsForSetValueIfFinal(cModel, parameters)
-		case setValueIfValue:
+		case SetValueIfValue:
 			addConstraintsForSetValueIfValue(cModel, parameters)
-		case excludeValueIfValue:
+		case ExcludeValueIfValue:
 			addConstraintsForExcludeValueIfValue(cModel, parameters)
 		default:
 			log.Default().Println("unknown constraint type", cModel.constraintType)

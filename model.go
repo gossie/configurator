@@ -87,23 +87,23 @@ func (pModel parameterModel) toInstance() configuration.InternalParameter {
 	)
 }
 
-type constraintType int
+type ConstraintType int
 
 const (
-	setValueIfFinal constraintType = iota
-	setValueIfValue
-	excludeValueIfValue
+	SetValueIfFinal ConstraintType = iota
+	SetValueIfValue
+	ExcludeValueIfValue
 )
 
 type constraintModel struct {
-	constraintType        constraintType
+	constraintType        ConstraintType
 	srcId, targetId       int
 	srcValue, targetValue valueModel
 }
 
 func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
-		constraintType: setValueIfFinal,
+		constraintType: SetValueIfFinal,
 		srcId:          srcId,
 		targetId:       targetId,
 		targetValue:    targetValue,
@@ -112,7 +112,7 @@ func NewSetValueIfFinalConstraintModel(srcId, targetId int, targetValue valueMod
 
 func NewSetValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
-		constraintType: setValueIfValue,
+		constraintType: SetValueIfValue,
 		srcId:          srcId,
 		targetId:       targetId,
 		srcValue:       srcValue,
@@ -122,7 +122,7 @@ func NewSetValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId 
 
 func NewExcludeValueIfValueConstraintModel(srcId int, srcValue valueModel, targetId int, targetValue valueModel) constraintModel {
 	return constraintModel{
-		constraintType: excludeValueIfValue,
+		constraintType: ExcludeValueIfValue,
 		srcId:          srcId,
 		targetId:       targetId,
 		srcValue:       srcValue,
