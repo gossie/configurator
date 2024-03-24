@@ -3,6 +3,7 @@ package configurator_test
 import (
 	"testing"
 
+	model "github.com/gossie/configuration-model"
 	"github.com/gossie/configurator"
 	"github.com/gossie/configurator/configuration"
 )
@@ -65,15 +66,15 @@ func checkUnselectableParameter(param configuration.Parameter, err error, expect
 }
 
 func TestThatConfigurationIsStarted(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddParameter("P3", configurator.NewIntRangeModel(7, false, 17, false))
-	model.AddParameter("P4", configurator.NewIntRangeModel(7, false, 17, true))
-	model.AddParameter("P5", configurator.NewIntRangeModel(7, true, 17, false))
-	model.AddParameter("P6", configurator.NewIntRangeModel(7, true, 17, true))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddParameter("P3", model.NewIntRangeModel(7, false, 17, false))
+	confModel.AddParameter("P4", model.NewIntRangeModel(7, false, 17, true))
+	confModel.AddParameter("P5", model.NewIntRangeModel(7, true, 17, false))
+	confModel.AddParameter("P6", model.NewIntRangeModel(7, true, 17, true))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 
 	p1, errP1 := configuration.ParameterById(1)
 	checkOpenParameter(p1, errP1, 1, "P1", "{1,2,3}", t)
@@ -95,10 +96,10 @@ func TestThatConfigurationIsStarted(t *testing.T) {
 }
 
 func TestThatParameterIsNotFound(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntSetModel([]int{1, 2, 3}))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 
 	_, err := configuration.ParameterById(2)
 	if err == nil {
@@ -107,10 +108,10 @@ func TestThatParameterIsNotFound(t *testing.T) {
 }
 
 func TestThatValueIsNotSetBecauseTheParameterIsMissing(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntSetModel([]int{1, 2, 3}))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 2, "2")
 
 	_, err := configuration.ParameterById(2)
@@ -121,11 +122,11 @@ func TestThatValueIsNotSetBecauseTheParameterIsMissing(t *testing.T) {
 }
 
 func TestThatValueIsSet_intValues(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -136,10 +137,10 @@ func TestThatValueIsSet_intValues(t *testing.T) {
 }
 
 func TestThatAnImpossibleValueIsNotSet_intValues(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntSetModel([]int{1, 2, 3}))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntSetModel([]int{1, 2, 3}))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, err := configurator.SetValue(configuration, 1, "4")
 	if err == nil {
 		t.Fatal("4 is not a valid value and should cause an error")
@@ -151,11 +152,11 @@ func TestThatAnImpossibleValueIsNotSet_intValues(t *testing.T) {
 }
 
 func TestThatValueIsSet_intRange(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -166,10 +167,10 @@ func TestThatValueIsSet_intRange(t *testing.T) {
 }
 
 func TestThatAnImpossibleValueIsNotSet_intRange(t *testing.T) {
-	model := configurator.Model{}
-	model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
+	confModel := model.Model{}
+	confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, err := configurator.SetValue(configuration, 1, "9")
 	if err == nil {
 		t.Fatal("4 is not a valid value and should cause an error")
@@ -181,12 +182,12 @@ func TestThatAnImpossibleValueIsNotSet_intRange(t *testing.T) {
 }
 
 func TestThatForwardRuleIsExecuted(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), model.NewFinalIntModel(3)))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -197,12 +198,12 @@ func TestThatForwardRuleIsExecuted(t *testing.T) {
 }
 
 func TestThatBackwardRuleIsExecuted(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), model.NewFinalIntModel(3)))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 2, "1")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -213,14 +214,14 @@ func TestThatBackwardRuleIsExecuted(t *testing.T) {
 }
 
 func TestThatDependingForwardRulesAreExecuted(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel3 := model.AddParameter("P3", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), configurator.NewIntSetModel([]int{1, 2})))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	pModel3 := confModel.AddParameter("P3", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), model.NewFinalIntModel(3)))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), model.NewIntSetModel([]int{1, 2})))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "2")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -233,14 +234,14 @@ func TestThatDependingForwardRulesAreExecuted(t *testing.T) {
 }
 
 func TestThatDependingBackwardRulesAreExecuted(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel3 := model.AddParameter("P3", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), configurator.NewFinalIntModel(3)))
-	model.AddConstraint(configurator.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), configurator.NewIntSetModel([]int{1, 2})))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	pModel3 := confModel.AddParameter("P3", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel1.Id(), pModel2.Id(), model.NewFinalIntModel(3)))
+	confModel.AddConstraint(model.NewSetValueIfFinalConstraintModel(pModel2.Id(), pModel3.Id(), model.NewIntSetModel([]int{1, 2})))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 3, "3")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -253,12 +254,12 @@ func TestThatDependingBackwardRulesAreExecuted(t *testing.T) {
 }
 
 func TestThatConstraintImpactIsReverted(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel2.Id(), configurator.NewFinalIntModel(3)))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfValueConstraintModel(pModel1.Id(), model.NewFinalIntModel(7), pModel2.Id(), model.NewFinalIntModel(3)))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "7")
 
 	p1, errP1 := configuration.ParameterById(1)
@@ -277,12 +278,12 @@ func TestThatConstraintImpactIsReverted(t *testing.T) {
 }
 
 func TestThatConstraintAreCheckedWhenConfigurationStarts(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewFinalIntModel(7))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	model.AddConstraint(configurator.NewSetValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel2.Id(), configurator.NewFinalIntModel(3)))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewFinalIntModel(7))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	confModel.AddConstraint(model.NewSetValueIfValueConstraintModel(pModel1.Id(), model.NewFinalIntModel(7), pModel2.Id(), model.NewFinalIntModel(3)))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 
 	p1, errP1 := configuration.ParameterById(1)
 	p2, errP2 := configuration.ParameterById(2)
@@ -292,14 +293,14 @@ func TestThatConstraintAreCheckedWhenConfigurationStarts(t *testing.T) {
 }
 
 func TestThatConstraintExcludesValues(t *testing.T) {
-	model := configurator.Model{}
-	pModel1 := model.AddParameter("P1", configurator.NewIntRangeModel(1, false, 8, false))
-	pModel2 := model.AddParameter("P2", configurator.NewIntSetModel([]int{1, 2, 3}))
-	pModel3 := model.AddParameter("P3", configurator.NewIntRangeModel(10, false, 20, false))
-	model.AddConstraint(configurator.NewExcludeValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel2.Id(), configurator.NewFinalIntModel(2)))
-	model.AddConstraint(configurator.NewExcludeValueIfValueConstraintModel(pModel1.Id(), configurator.NewFinalIntModel(7), pModel3.Id(), configurator.NewFinalIntModel(15)))
+	confModel := model.Model{}
+	pModel1 := confModel.AddParameter("P1", model.NewIntRangeModel(1, false, 8, false))
+	pModel2 := confModel.AddParameter("P2", model.NewIntSetModel([]int{1, 2, 3}))
+	pModel3 := confModel.AddParameter("P3", model.NewIntRangeModel(10, false, 20, false))
+	confModel.AddConstraint(model.NewExcludeValueIfValueConstraintModel(pModel1.Id(), model.NewFinalIntModel(7), pModel2.Id(), model.NewFinalIntModel(2)))
+	confModel.AddConstraint(model.NewExcludeValueIfValueConstraintModel(pModel1.Id(), model.NewFinalIntModel(7), pModel3.Id(), model.NewFinalIntModel(15)))
 
-	configuration := configurator.Start(model)
+	configuration := configurator.Start(confModel)
 	configuration, _ = configurator.SetValue(configuration, 1, "7")
 
 	p1, errP1 := configuration.ParameterById(1)

@@ -5,29 +5,30 @@ import (
 	"log"
 	"strconv"
 
+	model "github.com/gossie/configuration-model"
 	configuration1 "github.com/gossie/configurator/configuration"
 	"github.com/gossie/configurator/internal/configuration"
 	"github.com/gossie/configurator/internal/value"
 )
 
-func addConstraintsForSetValueIfFinal(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
-	srcParam := parameters[cModel.srcId]
-	forwardConstraint := configuration.CreateContraint(configuration.NewFinalCondition(cModel.srcId), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+func addConstraintsForSetValueIfFinal(cModel model.ConstraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.SrcId()]
+	forwardConstraint := configuration.CreateContraint(configuration.NewFinalCondition(cModel.SrcId()), configuration.NewSetValueExecution(cModel.SrcId(), cModel.TargetId(), valueToInstance(cModel.TargetValue())))
 	srcParam.AppendConstraint(forwardConstraint)
 
-	targetParam := parameters[cModel.targetId]
+	targetParam := parameters[cModel.TargetId()]
 	condition := configuration.NewCompositeCondition(
-		configuration.NewValueCondition(cModel.targetId, configuration.IsImpossible, cModel.targetValue.toInstance()),
+		configuration.NewValueCondition(cModel.TargetId(), configuration.IsImpossible, valueToInstance(cModel.TargetValue())),
 		configuration.Or,
-		configuration.NewDisabledCondition(cModel.targetId),
+		configuration.NewDisabledCondition(cModel.TargetId()),
 	)
-	backwardConstraint := configuration.CreateContraint(condition, configuration.NewDisableExecution(cModel.srcId))
+	backwardConstraint := configuration.CreateContraint(condition, configuration.NewDisableExecution(cModel.SrcId()))
 	targetParam.AppendConstraint(backwardConstraint)
 }
 
-func addConstraintsForSetValueIfValue(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
-	srcParam := parameters[cModel.srcId]
-	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.srcId, configuration.Is, cModel.srcValue.toInstance()), configuration.NewSetValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+func addConstraintsForSetValueIfValue(cModel model.ConstraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.SrcId()]
+	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.SrcId(), configuration.Is, valueToInstance(cModel.SrcValue())), configuration.NewSetValueExecution(cModel.SrcId(), cModel.TargetId(), valueToInstance(cModel.TargetValue())))
 	srcParam.AppendConstraint(newSrcConstraint)
 
 	// TODO: exclude src value
@@ -36,31 +37,31 @@ func addConstraintsForSetValueIfValue(cModel constraintModel, parameters map[int
 	// targetParam.AppendConstraint(newTargetConstraint)
 }
 
-func addConstraintsForExcludeValueIfValue(cModel constraintModel, parameters map[int]*configuration.InternalParameter) {
-	srcParam := parameters[cModel.srcId]
-	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.srcId, configuration.Is, cModel.srcValue.toInstance()), configuration.NewExcludeValueExecution(cModel.srcId, cModel.targetId, cModel.targetValue.toInstance()))
+func addConstraintsForExcludeValueIfValue(cModel model.ConstraintModel, parameters map[int]*configuration.InternalParameter) {
+	srcParam := parameters[cModel.SrcId()]
+	newSrcConstraint := configuration.CreateContraint(configuration.NewValueCondition(cModel.SrcId(), configuration.Is, valueToInstance(cModel.SrcValue())), configuration.NewExcludeValueExecution(cModel.SrcId(), cModel.TargetId(), valueToInstance(cModel.TargetValue())))
 	srcParam.AppendConstraint(newSrcConstraint)
 
 	// TODO
 }
 
-func Start(model Model) configuration1.Configuration {
-	parameters := make(map[int]*configuration.InternalParameter, len(model.parameters))
-	for _, pModel := range model.parameters {
-		pInstance := pModel.toInstance()
-		parameters[pModel.id] = &pInstance
+func Start(confModel model.Model) configuration1.Configuration {
+	parameters := make(map[int]*configuration.InternalParameter, len(confModel.Parameters()))
+	for _, pModel := range confModel.Parameters() {
+		pInstance := parameterToInstance(pModel)
+		parameters[pModel.Id()] = &pInstance
 	}
 
-	for _, cModel := range model.constraints {
-		switch cModel.constraintType {
-		case SetValueIfFinal:
+	for _, cModel := range confModel.Constraints() {
+		switch cModel.ConstraintType() {
+		case model.SetValueIfFinal:
 			addConstraintsForSetValueIfFinal(cModel, parameters)
-		case SetValueIfValue:
+		case model.SetValueIfValue:
 			addConstraintsForSetValueIfValue(cModel, parameters)
-		case ExcludeValueIfValue:
+		case model.ExcludeValueIfValue:
 			addConstraintsForExcludeValueIfValue(cModel, parameters)
 		default:
-			log.Default().Println("unknown constraint type", cModel.constraintType)
+			log.Default().Println("unknown constraint type", cModel.ConstraintType())
 		}
 	}
 
@@ -87,4 +88,32 @@ func SetValue(config configuration1.Configuration, parameterId int, valueToSet s
 		c(internalConfig.Parameters)
 	}
 	return config, err
+}
+
+func parameterToInstance(pModel model.ParameterModel) configuration.InternalParameter {
+	return configuration.NewInternalParameter(
+		pModel.Id(),
+		pModel.Name(),
+		valueToInstance(pModel.Value()),
+	)
+}
+
+func valueToInstance(vModel model.ValueModel) value.Value {
+	switch vModel.ValueType() {
+	case model.IntSetType:
+		return value.NewIntValues(vModel.IntValues())
+	case model.StringSetType:
+		confValues := make([]int, len(vModel.StringValues()))
+		for index := range len(vModel.StringValues()) {
+			confValues[index] = index
+		}
+		return value.NewIntValues(confValues)
+	case model.IntRangeType:
+		return value.NewIntRange(vModel.Min(), vModel.MinOpen(), vModel.Max(), vModel.MaxOpen())
+	case model.FinalInt:
+		return value.NewIntValues([]int{vModel.FinalValue()})
+	default:
+		log.Default().Println("unknown value type", vModel.ValueType())
+		return nil
+	}
 }
